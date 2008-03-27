@@ -2,7 +2,7 @@ Spindown v0.1.2:
 
 27-03-2008:
   * CONFPATH wasn't set with configure
-  * changed pkill with kill because I cill with the pid
+  * changed pkill with kill because I kill with the pid
   * configure emptied the general.h
 
 25-03-2008:

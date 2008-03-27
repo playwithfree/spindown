@@ -221,18 +221,16 @@ void Spindown::parseCommandline(int argc, char* argv[] )
   {
     arg = argv[i];
     
-    if( arg=="-f" || arg=="--fifo-path" )
-      fifoPath = relToAbs(argv[++i]);
-    
-    else if( arg=="-c" || arg=="--config-file" )
-      confPath == relToAbs(argv[++i]);
-    
-    else if( arg=="-v" || arg=="--version" )
+    //print version information
+    //version number is set in general.h
+    if( arg=="-v" || arg=="--version" )
     {
       cout << "This is spindownd - a daemon that spinsdown idle disks v" << VERSION << endl
            << "(c) 2008 Dimitri Michaux <http://projects.dimis-site.be>" << endl;
       exit(EXIT_SUCCESS);
     }
+    
+    //show the help file text
     else if( arg=="-h" || arg=="--help" )
     {
       cout << "Usage: spindownd [OPTION]..." << endl
@@ -247,6 +245,18 @@ void Spindown::parseCommandline(int argc, char* argv[] )
            << "  -v, --version         Prints the version number." << endl << endl
            << "For more information and contact visit <http://projects.dimis-site.be>." <<endl;
       exit(EXIT_SUCCESS);
+    }
+    
+    //don't read to far
+    else if( i+1 < argc )
+    {
+      //set fifopath
+      if( arg=="-f"||arg=="--fifo-path" )
+        fifoPath = relToAbs(argv[++i]);
+      
+      //set config file path
+      else if( arg=="-c" || arg=="--config-file" )
+        confPath == relToAbs(argv[++i]);
     }
   }
 }
