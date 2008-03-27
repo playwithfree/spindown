@@ -1,0 +1,94 @@
+#!/bin/bash
+
+SPINDOWNPATH="/sbin/spindownd"
+LOCKFILE="/var/lock/spindown.lock"
+FIFOPATH="./spindown.fifo"
+PIDPATH="./spindown.pid"
+
+# echo's the string and then the amount of spaces needed to fill it till length
+# $1 the string
+# $2 the desired length
+spaces() {
+  declare -i i
+  declare -i diff
+  diff=$2-${#1}
+  
+  if [ $diff -lt 1 ]; then
+    diff=1
+  fi
+
+  echo -n $1
+
+  i=0
+  while [ $i -lt $diff ]; do
+    echo -n " "
+    i=$i+1
+  done
+}
+
+status() {
+  declare string
+  declare -i i
+  i=0
+  
+  spaces "name" 15
+  spaces "watched" 15
+  spaces "active" 15
+  spaces "idle-time" 15
+  echo ""
+  
+  for line in `cat $FIFOPATH`; do
+    
+    remainder=`expr $i % 4`
+    if [ $remainder -eq 0 -a $i -ne 0 ]; then
+      echo ""
+      spaces $line 15
+    else
+      spaces $line 15
+    fi
+    
+    i=$i+1
+  done
+  
+  echo ""
+}
+
+# Start the service FOO
+start() {
+        echo -n "Starting spindown daemon: "
+        ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH} 1> ${PIDPATH}
+### Create the lock file ###
+        touch ${LOCKFILE}
+        echo "server startup"
+}
+
+# Restart the service FOO
+stop() {
+        echo -n "Stopping spindown daemon: "
+        pkill `cat ${PIDPATH}`
+### Now, delete the lock file ###
+        rm -f ${LOCKFILE}
+        echo "stopped"
+}
+
+### main logic ###
+case "$1" in
+  "start")
+        start
+        ;;
+  "stop")
+        stop
+        ;;
+  "status")
+        status
+        ;;
+  "restart"|"reload"|"condrestart")
+        stop
+        start
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+
+exit 0
