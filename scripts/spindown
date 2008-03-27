@@ -4,6 +4,7 @@ SPINDOWNPATH="/sbin/spindownd"
 LOCKFILE="/var/lock/spindown.lock"
 FIFOPATH="./spindown.fifo"
 PIDPATH="./spindown.pid"
+CONFPATH="./spindown.conf"
 
 # echo's the string and then the amount of spaces needed to fill it till length
 # $1 the string
@@ -65,7 +66,7 @@ start() {
 # Restart the service FOO
 stop() {
         echo -n "Stopping spindown daemon: "
-        pkill `cat ${PIDPATH}`
+        kill `cat ${PIDPATH}`
 ### Now, delete the lock file ###
         rm -f ${LOCKFILE}
         echo "stopped"
