@@ -30,10 +30,6 @@ using std::string;
 
 #include <ctime>
 
-//commands:
-#define CMD_DISKSTATS 0
-#define CMD_BYID      1
-
 class Disk
 {
     public:

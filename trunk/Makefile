@@ -4,6 +4,7 @@ OBJS = disk.o thread.o spindown.o iniparser.o dictionary.o
 CC = g++
 CFLAGS =-O1 -pthread
 SRC = src/
+INPARSER = $(SRC)ininiparser3.0b/
 
 all: $(OBJS)
 	g++ $(CFLAGS) -o spindownd $(SRC)main.cpp $(OBJS)
@@ -45,11 +46,11 @@ disk.o: $(SRC)disk.cpp
 spindown.o: $(SRC)spindown.cpp
 	g++ $(CFLAGS) -c $(SRC)spindown.cpp
 	
-iniparser.o: $(SRC)ininiparser3.0b/iniparser.c
-	g++ $(CFLAGS) -c $(SRC)ininiparser3.0b/iniparser.c
+iniparser.o: $(INPARSER)iniparser.c
+	g++ $(CFLAGS) -c $(INPARSER)iniparser.c
 	
-dictionary.o: $(SRC)ininiparser3.0b/dictionary.c
-	g++ $(CFLAGS) -c $(SRC)ininiparser3.0b/dictionary.c
+dictionary.o: $(INPARSER)dictionary.c
+	g++ $(CFLAGS) -c $(INPARSER)dictionary.c
 
 thread.o: $(SRC)thread.cpp
 	g++ $(CFLAGS) -c $(SRC)thread.cpp
