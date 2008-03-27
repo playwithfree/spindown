@@ -4,6 +4,7 @@ Spindown v0.1.2:
   * CONFPATH wasn't set with configure
   * changed pkill with kill because I kill with the pid
   * configure emptied the general.h
+  * Fixed a bug that made spindownd segfault when only -c or -f was given but no value.
 
 25-03-2008:
   * The path to fifo and path to conf file can be set from the commandline.
