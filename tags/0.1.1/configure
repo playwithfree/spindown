@@ -1,0 +1,87 @@
+#!/bin/bash
+
+generateGeneral() {
+  echo -n "Writting configuration to src/general.h..."
+  
+  echo "#define DEVID_PATH \"/dev/disk/by-id/\"" >> src/general.h
+  echo "#define STATS_PATH \"/proc/diskstats\"" >> src/general.h
+  echo "#define CHAR_BUF   256" >> src/general.h
+  
+  if [ "$1" == "debug" ]; then
+    CURDIR=`pwd`
+    echo "#define FIFO_PATH \"$CURDIR/spindown.fifo\"" >> src/general.h
+    echo "#define CONF_PATH  \"$CURDIR/spindown.conf\"" >> src/general.h
+  else
+    echo "#define FIFO_PATH \"/var/run/spindown.fifo\"" >> src/general.h
+    echo "#define CONF_PATH  \"/etc/spindown.conf\"" >> src/general.h
+  fi
+  
+  echo -e "\t\t\tdone."
+}
+
+generateSpindown() {
+  echo -n "Generating spindown init script..."
+  echo -n "" > spindown
+  CURDIR=`pwd`
+
+  while read line; do
+  
+    if [ "${line:0:13}" == "SPINDOWNPATH=" ]; then
+    
+      echo -n "SPINDOWNPATH=" >> spindown
+      if [ "$1" == "debug" ]; then
+        echo "\"$CURDIR/spindownd\"" >> spindown
+      else
+        echo "\"/sbin/spindownd\""  >> spindown
+      fi
+      
+    else if [ "${line:0:9}" == "LOCKFILE=" ]; then
+      
+      echo -n "LOCKFILE=" >> spindown
+      if [ "$1" == "debug" ]; then
+        echo "\"$CURDIR/spindown.lock\"" >> spindown
+      else
+        echo "\"/var/lock/spindown.lock\"" >> spindown
+      fi
+      
+    else if [ "${line:0:9}" == "FIFOPATH=" ]; then
+      
+      echo -n "FIFOPATH=" >> spindown
+      if [ "$1" == "debug" ]; then
+        echo "\"$CURDIR/spindown.fifo\"" >> spindown
+      else
+        echo "\"/var/run/spindown.fifo\"" >> spindown
+      fi
+      
+    else if [ "${line:0:8}" == "PIDPATH=" ]; then
+      
+      echo -n "PIDPATH=" >> spindown
+      if [ "$1" == "debug" ]; then
+        echo "\"$CURDIR/spindown.pid\"" >> spindown
+      else
+        echo "\"/var/run/spindown.pid\"" >> spindown
+      fi
+      
+    else
+      echo $line >> spindown
+    fi fi fi fi
+  
+  done < scripts/spindown
+  
+  chmod +x spindown
+  
+  echo -e "\t\t\t\tdone."
+}
+
+#empty the general.h
+echo -n "" > src/general.h
+
+#is sg_start present?
+if ! command -v sg_start &>/dev/null
+then
+        echo "The command sg_start was not found, but is required."
+        exit 0
+fi
+
+generateGeneral $1
+generateSpindown $1

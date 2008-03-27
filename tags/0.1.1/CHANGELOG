@@ -1,0 +1,33 @@
+17-03-2008:
+  * configure didn't configure the pid path
+  * Added GPLv3 in COPYING
+
+16-03-2008:
+  * Commands are now unsigned char, not string
+  * Configure generates init script for debuging
+  * Added pid file
+
+15-03-2008:
+  * Now using ifstream for reading from diskstats.
+  * Added compile and install information to readme.
+  * Optimized the spaces function in spindown.
+
+14-03-2008:
+  * Deamonized the program.
+
+11-03-2008:
+  * Added seperate thread that writes to a fifo to display the status
+
+29-02-2008:
+  * Added GPLv3
+  * Added TODO file
+
+27-02-2008:
+  * Added systemcall to sg_start
+
+26-02-2008:
+  * Created spindown class
+  * Included iniParser: stand-alone ini Parser library in ANSI C
+
+25-02-2008:
+  * Creation of changelog
