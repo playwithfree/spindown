@@ -1,0 +1,15 @@
+To compile the program of debugging purposes compile like so:
+  # ./configure debug
+  # make
+
+To make an installation type:
+  # ./configure
+  # make
+  # make install
+
+Before you can run it you'll need to copy the spindown.conf file to /etc/
+and adept it to your needs. You can run the deamon like this:
+  # /etc/init.d/spindown start
+
+You can also get the status as following:
+  # /etc/init.d/spindown status
