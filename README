@@ -1,7 +1,3 @@
-To compile the program of debugging purposes compile like so:
-  # ./configure debug
-  # make
-
 To make an installation type:
   # ./configure
   # make
@@ -13,3 +9,11 @@ and adept it to your needs. You can run the deamon like this:
 
 You can also get the status as following:
   # /etc/init.d/spindown status
+
+To compile the program of debugging purposes compile like so:
+  # ./configure debug
+  # make
+
+The only difference between debug and normal is that the spindown init script
+is generated in sutch a way that it makes spindownd look for all it's files in
+the current directory.
