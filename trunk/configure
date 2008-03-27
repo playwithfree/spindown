@@ -43,9 +43,18 @@ generateSpindown() {
         echo "\"/var/run/spindown.pid\"" >> spindown
       fi
       
+    else if [ "${line:0:8}" == "CONFPATH=" ]; then
+      
+      echo -n "CONFPATH=" >> spindown
+      if [ "$1" == "debug" ]; then
+        echo "\"$CURDIR/spindown.conf\"" >> spindown
+      else
+        echo "\"/etc/spindown.conf\"" >> spindown
+      fi
+      
     else
       echo $line >> spindown
-    fi fi fi fi
+    fi fi fi fi fi
   
   done < scripts/spindown
   
@@ -53,9 +62,6 @@ generateSpindown() {
   
   echo -e "\t\t\t\tdone."
 }
-
-#empty the general.h
-echo -n "" > src/general.h
 
 #is sg_start present?
 if ! command -v sg_start &>/dev/null

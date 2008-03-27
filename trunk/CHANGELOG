@@ -1,8 +1,13 @@
 Spindown v0.1.2:
 
+27-03-2008:
+  * CONFPATH wasn't set with configure
+  * changed pkill with kill because I cill with the pid
+  * configure emptied the general.h
+
 25-03-2008:
-  * The path to fifo and path to conf file can be changed with the commandline.
-  * Added a function to change relative paths relToAbs ./file to absolute ones /path/to/file
+  * The path to fifo and path to conf file can be set from the commandline.
+  * Added a function (relToAbs) to change relative paths ./file to absolute ones /path/to/file
   * Change spindown init script so it works with the new configuration style
   * configure doesn't generate the general.h file anymore, nothing about config there anylonger
   * added help text to spindownd
