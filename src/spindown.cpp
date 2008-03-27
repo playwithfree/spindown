@@ -34,8 +34,6 @@
 
 using std::string;
 using std::ofstream;
-using std::ifstream;
-using std::ios;
 using std::cout;
 using std::endl;
 
@@ -46,20 +44,43 @@ using std::endl;
 #include <sys/types.h>
 #include <fcntl.h>
 
-Spindown::Spindown( int argc, char* argv[] )
+Spindown::Spindown()
 {
-  //when the user doesn't specify these file we look for the here
-  fifoPath = relToAbs( "./spindown.fifo" );
-  confPath = relToAbs( "./spindown.conf" );
-  
-  cycleTime = 60;
-  
-  //these functions have to be called before daemonize because it
-  //changes the path
-  parseCommandline(argc, argv);
+  /* Our process ID and Session ID */
+  pid_t pid, sid;
+        
+  /* Fork off the parent process */
+  pid = fork();
+  if (pid < 0)
+    exit(EXIT_FAILURE);
+
+  /* If we got a good PID, then
+  we can exit the parent process. */
+  if (pid > 0)
+  {
+    cout << pid << endl;
+    exit(EXIT_SUCCESS);
+  }
+
+  /* Change the file mode mask */
+  umask(0);
+
+  /* Open any logs here */
   readConfig();
   
-  daemonize();
+  /* Create a new SID for the child process */
+  sid = setsid();
+  if (sid < 0)
+    exit(EXIT_FAILURE);
+  
+  /* Change the current working directory */
+  if ((chdir("/")) < 0)
+    exit(EXIT_FAILURE);
+  
+  /* Close out the standard file descriptors */
+  close(STDIN_FILENO);
+  close(STDOUT_FILENO);
+  close(STDERR_FILENO);
 }
 
 int Spindown::execute()
@@ -112,11 +133,11 @@ void Spindown::checkFifo()
 {
   ofstream fifoOut;
 
-  mkfifo( fifoPath.data(), 0744 );
+  mkfifo( FIFO_PATH, 0744 );
   
   while( true )
   {
-    fifoOut.open(fifoPath.data());
+    fifoOut.open(FIFO_PATH);
 
     for( int i=0 ; i < disks.size() ; i++ )
     {
@@ -142,7 +163,7 @@ void Spindown::readConfig()
   string input;
   
   //try to open the configuration file
-  if( (ini=iniparser_load(confPath.data()))==NULL )
+  if( (ini=iniparser_load(CONF_PATH))==NULL )
     exit(1);
   
   //go trough the sections of the file
@@ -155,10 +176,6 @@ void Spindown::readConfig()
     if( section=="general" )
     {
       Disk::spinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
-      
-      if( Disk::spinDownTime <= 0 )
-        Disk::spinDownTime = 1; //one is still low, but 0 would be disaster
-      
       cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
     }
     //disk?
@@ -173,100 +190,4 @@ void Spindown::readConfig()
   
   //free the memory of the directory
   iniparser_freedict(ini);
-}
-
-void Spindown::daemonize()
-{
-  /* Our process ID and Session ID */
-  pid_t pid, sid;
-
-  /* Fork off the parent process */
-  pid = fork();
-  if (pid < 0)
-    exit(EXIT_FAILURE);
-
-  /* If we got a good PID, then
-  we can exit the parent process. */
-  if (pid > 0)
-  {
-    cout << pid << endl;
-    exit(EXIT_SUCCESS);
-  }
-
-  /* Change the file mode mask */
-  umask(0);
-
-  /* Open any logs here */
-  
-  /* Create a new SID for the child process */
-  sid = setsid();
-  if (sid < 0)
-    exit(EXIT_FAILURE);
-  
-  /* Change the current working directory */
-  if ((chdir("/")) < 0)
-    exit(EXIT_FAILURE);
-  
-  /* Close out the standard file descriptors */
-  close(STDIN_FILENO);
-  close(STDOUT_FILENO);
-  close(STDERR_FILENO);
-}
-
-void Spindown::parseCommandline(int argc, char* argv[] )
-{
-  string arg;
-
-  for( int i=0 ; i<argc ; i++ )
-  {
-    arg = argv[i];
-    
-    if( arg=="-f" || arg=="--fifo-path" )
-      fifoPath = relToAbs(argv[++i]);
-    
-    else if( arg=="-c" || arg=="--config-file" )
-      confPath == relToAbs(argv[++i]);
-    
-    else if( arg=="-v" || arg=="--version" )
-    {
-      cout << "This is spindownd - a daemon that spinsdown idle disks v" << VERSION << endl
-           << "(c) 2008 Dimitri Michaux <http://projects.dimis-site.be>" << endl;
-      exit(EXIT_SUCCESS);
-    }
-    else if( arg=="-h" || arg=="--help" )
-    {
-      cout << "Usage: spindownd [OPTION]..." << endl
-           << "spindownd is a daemon that spinsdown idle disks." << endl << endl
-           << "  -f, --fifo-path       The path to the fifo that is used for printing the" << endl
-           << "                          status. When the fifo doesn't exist it will be" << endl
-           << "                          created. The default is spindown.fifo in the" << endl
-           << "                          current directory." << endl
-           << "  -c, --config-file     Path to the configuration file. The default is" << endl
-           << "                          spindown.conf in the current directory." << endl
-           << "  -h, --help            Displays this text." << endl
-           << "  -v, --version         Prints the version number." << endl << endl
-           << "For more information and contact visit <http://projects.dimis-site.be>." <<endl;
-      exit(EXIT_SUCCESS);
-    }
-  }
-}
-
-string Spindown::relToAbs( string path )
-{
-  char buf[CHAR_BUF];
-  //only get the current directory once, so static
-  static string wd = getcwd( buf, CHAR_BUF );
-  
-  //if it starts with "./" it's relative
-  if( path.substr(0,2) == "./" )
-  {
-    path.erase(0,1);
-    path.insert( 0, wd );
-  }
-  
-  //everything else that doesn't start with "/" it's relative
-  else if( path.substr(0,1) != "/" )
-    path.insert( 0, wd+"/" );
-  
-  return path;
 }

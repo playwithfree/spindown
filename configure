@@ -1,5 +1,24 @@
 #!/bin/bash
 
+generateGeneral() {
+  echo -n "Writting configuration to src/general.h..."
+  
+  echo "#define DEVID_PATH \"/dev/disk/by-id/\"" >> src/general.h
+  echo "#define STATS_PATH \"/proc/diskstats\"" >> src/general.h
+  echo "#define CHAR_BUF   256" >> src/general.h
+  
+  if [ "$1" == "debug" ]; then
+    CURDIR=`pwd`
+    echo "#define FIFO_PATH \"$CURDIR/spindown.fifo\"" >> src/general.h
+    echo "#define CONF_PATH  \"$CURDIR/spindown.conf\"" >> src/general.h
+  else
+    echo "#define FIFO_PATH \"/var/run/spindown.fifo\"" >> src/general.h
+    echo "#define CONF_PATH  \"/etc/spindown.conf\"" >> src/general.h
+  fi
+  
+  echo -e "\t\t\tdone."
+}
+
 generateSpindown() {
   echo -n "Generating spindown init script..."
   echo -n "" > spindown
@@ -64,4 +83,5 @@ then
         exit 0
 fi
 
+generateGeneral $1
 generateSpindown $1

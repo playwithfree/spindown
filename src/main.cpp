@@ -22,9 +22,9 @@
 
 #include "spindown.h"
 
-int main( int argc, char* argv[] )
+int main( void )
 {
-  Spindown spindown( argc, argv );
+  Spindown spindown;
   
   spindown.start();
   

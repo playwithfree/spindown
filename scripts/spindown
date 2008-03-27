@@ -56,7 +56,7 @@ status() {
 # Start the service FOO
 start() {
         echo -n "Starting spindown daemon: "
-        ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH} 1> ${PIDPATH}
+        ${SPINDOWNPATH} 1> ${PIDPATH}
 ### Create the lock file ###
         touch ${LOCKFILE}
         echo "server startup"
