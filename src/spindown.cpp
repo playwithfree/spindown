@@ -48,18 +48,20 @@ using std::endl;
 
 Spindown::Spindown( int argc, char* argv[] )
 {
-  //when the user doesn't specify these file we look for the here
+  char buf[CHAR_BUF];
+  //this function has to be called before daemonize because it changes the path
+  runPath = getcwd( buf, CHAR_BUF );
+  
+  daemonize();
+  
+  //when the user doesn't specify these file we look for them here
   fifoPath = relToAbs( "./spindown.fifo" );
   confPath = relToAbs( "./spindown.conf" );
   
   cycleTime = 60;
-  
-  //these functions have to be called before daemonize because it
-  //changes the path
+
   parseCommandline(argc, argv);
   readConfig();
-  
-  daemonize();
 }
 
 int Spindown::execute()
@@ -263,20 +265,16 @@ void Spindown::parseCommandline(int argc, char* argv[] )
 
 string Spindown::relToAbs( string path )
 {
-  char buf[CHAR_BUF];
-  //only get the current directory once, so static
-  static string wd = getcwd( buf, CHAR_BUF );
-  
   //if it starts with "./" it's relative
   if( path.substr(0,2) == "./" )
   {
     path.erase(0,1);
-    path.insert( 0, wd );
+    path.insert( 0, runPath );
   }
   
   //everything else that doesn't start with "/" it's relative
   else if( path.substr(0,1) != "/" )
-    path.insert( 0, wd+"/" );
+    path.insert( 0, runPath+"/" );
   
   return path;
 }

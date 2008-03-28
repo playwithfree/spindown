@@ -46,6 +46,8 @@ class Spindown : public Thread
     string fifoPath;
     //path to configuration file
     string confPath;
+    //path from where the script was started
+    string runPath;
     
     //make a daemon from the program
     void daemonize();
