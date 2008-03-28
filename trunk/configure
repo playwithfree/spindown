@@ -43,7 +43,7 @@ generateSpindown() {
         echo "\"/var/run/spindown.pid\"" >> spindown
       fi
       
-    else if [ "${line:0:8}" == "CONFPATH=" ]; then
+    else if [ "${line:0:9}" == "CONFPATH=" ]; then
       
       echo -n "CONFPATH=" >> spindown
       if [ "$1" == "debug" ]; then
