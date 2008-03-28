@@ -1,7 +1,7 @@
 /**
  * Spindown is a daemon that can spindown idle discs.
  * Copyright (C) 2008  Dimitri Michaux <dimitri.michaux@gmail.com>
- *
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -52,16 +52,19 @@ Spindown::Spindown( int argc, char* argv[] )
   //this function has to be called before daemonize because it changes the path
   runPath = getcwd( buf, CHAR_BUF );
   
-  daemonize();
-  
-  //when the user doesn't specify these file we look for them here
+  //when the user doesn't specify these file we look for them in the current directory
   fifoPath = relToAbs( "./spindown.fifo" );
   confPath = relToAbs( "./spindown.conf" );
   
   cycleTime = 60;
 
+  //get command line parameters
   parseCommandline(argc, argv);
+  
+  //now load configuration file
   readConfig();
+  
+  daemonize();
 }
 
 int Spindown::execute()
@@ -227,8 +230,13 @@ void Spindown::parseCommandline(int argc, char* argv[] )
     //version number is set in general.h
     if( arg=="-v" || arg=="--version" )
     {
-      cout << "This is spindownd - a daemon that spinsdown idle disks v" << VERSION << endl
-           << "(c) 2008 Dimitri Michaux <http://projects.dimis-site.be>" << endl;
+      cout << "spindownd "<< VERSION << endl
+           << "This is spindownd - a daemon that spinsdown idle disks" << endl
+           << "(c) 2008 Dimitri Michaux <http://projects.dimis-site.be>" << endl
+           << "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>" << endl
+           << "This is free software: you are free to change and redistribute it." << endl
+           << "There is NO WARRANTY, to the extent permitted by law." << endl;
+
       exit(EXIT_SUCCESS);
     }
     
@@ -250,12 +258,16 @@ void Spindown::parseCommandline(int argc, char* argv[] )
     }
     
     //don't read to far
-    else if( arg=="-f"||arg=="--fifo-path" )
-        fifoPath = relToAbs(argv[++i]);
-      
-    //set config file path
-    else if( arg=="-c" || arg=="--config-file" )
-      confPath == relToAbs(argv[++i]);
+    else if( i+1 < argc )
+    {
+      //set fifo path
+      if( arg=="-f"||arg=="--fifo-path" )
+          fifoPath = relToAbs(argv[++i]);
+        
+      //set config file path
+      else if( arg=="-c" || arg=="--config-file" )
+        confPath = relToAbs(argv[++i]);
+    }
   }
 }
 

@@ -2,6 +2,11 @@
  * Spindown is a daemon that can spindown idle discs.
  * Copyright (C) 2008  Dimitri Michaux <dimitri.michaux@gmail.com>
  *
+ * main.cpp:
+ * Initializes the Spindown object and sends commnandline parameters to
+ * it, it also starts the main thread from spindown and starts the loop
+ * that checks the fifo.
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or

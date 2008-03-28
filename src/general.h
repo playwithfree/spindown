@@ -1,3 +1,7 @@
+/**
+ * This file contains some gener settings.
+ */
+
 #define DEVID_PATH "/dev/disk/by-id/"
 #define STATS_PATH "/proc/diskstats"
 #define CHAR_BUF   256

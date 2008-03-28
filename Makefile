@@ -1,5 +1,6 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
+VERSION = 0.1.2
 OBJS = disk.o thread.o spindown.o iniparser.o dictionary.o
 CC = g++
 CFLAGS =-O1 -pthread
@@ -39,6 +40,11 @@ uninstall:
 	rm $(etcdir)/spindown.conf $(etcdir)/init.d/spindown $(etcdir)/spindownd $(etcdir)/rc0.d/K20spindown\
 		$(etcdir)/rc1.d/K20spindown $(etcdir)/rc2.d/S20spindown $(etcdir)/rc3.d/S20spindown\
 		$(etcdir)/rc4.d/S20spindown $(etcdir)/rc5.d/S20spindown $(etcdir)/rc6.d/K20spindown
+
+dist:
+	DESTDIR=/tmp/spindown-$(VERSION) make install
+	tar czf spindown-$(VERSION).tar.gz /tmp/spindown-$(VERSION)
+	rm -d -r -f /tmp/spindown-$(VERSION)
 
 disk.o: $(SRC)disk.cpp
 	g++ $(CFLAGS) -c $(SRC)disk.cpp
