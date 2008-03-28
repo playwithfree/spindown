@@ -250,16 +250,12 @@ void Spindown::parseCommandline(int argc, char* argv[] )
     }
     
     //don't read to far
-    else if( i+1 < argc )
-    {
-      //set fifopath
-      if( arg=="-f"||arg=="--fifo-path" )
+    else if( arg=="-f"||arg=="--fifo-path" )
         fifoPath = relToAbs(argv[++i]);
       
-      //set config file path
-      else if( arg=="-c" || arg=="--config-file" )
-        confPath == relToAbs(argv[++i]);
-    }
+    //set config file path
+    else if( arg=="-c" || arg=="--config-file" )
+      confPath == relToAbs(argv[++i]);
   }
 }
 
