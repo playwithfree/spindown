@@ -54,21 +54,30 @@ status() {
   echo ""
 }
 
-# Start the service FOO
 start() {
-        echo -n "Starting spindown daemon: "
-        ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH} 1> ${PIDPATH}
+
+  if [ -f ${LOCKFILE} ]; then
+  
+    echo "The lockfile: \"${LOCKFILE}\" allready exists, this means the daemon is allready running. If you think this is wrong, please delete it by hand."
+  
+  else
+
+    echo -n "Starting spindownd daemon: "
+    ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH} 1> ${PIDPATH}
 ### Create the lock file ###
-        touch ${LOCKFILE}
-        echo "server startup"
+    touch ${LOCKFILE}
+    echo "server startup"
+  
+  fi
+  
 }
 
-# Restart the service FOO
 stop() {
-        echo -n "Stopping spindown daemon: "
+        echo -n "Stopping spindownd daemon: "
         kill `cat ${PIDPATH}`
 ### Now, delete the lock file ###
         rm -f ${LOCKFILE}
+        rm -f ${PIDPATH}
         echo "stopped"
 }
 
