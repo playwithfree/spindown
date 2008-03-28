@@ -42,8 +42,8 @@ uninstall:
 		$(etcdir)/rc4.d/S20spindown $(etcdir)/rc5.d/S20spindown $(etcdir)/rc6.d/K20spindown
 
 dist:
-	DESTDIR=/tmp/spindown-$(VERSION) make install
-	tar czf spindown-$(VERSION).tar.gz /tmp/spindown-$(VERSION)
+	DESTDIR=spindown-$(VERSION) make install
+	tar czf spindown-$(VERSION).tar.gz spindown-$(VERSION)
 	rm -d -r -f /tmp/spindown-$(VERSION)
 
 disk.o: $(SRC)disk.cpp
