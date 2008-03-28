@@ -2,6 +2,13 @@
  * Spindown is a daemon that can spindown idle discs.
  * Copyright (C) 2008  Dimitri Michaux <dimitri.michaux@gmail.com>
  *
+ * spindown.h:
+ * The class declaration for Spindown. This class manages the parsing
+ * of the commandline, reads the configuration file, sends feedback
+ * trough a fifi and manages all the disks in the system.
+ * 
+ * It contains all the disks and then sends all the changes to them.
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or

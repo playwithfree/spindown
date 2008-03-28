@@ -3,6 +3,7 @@ Spindown v0.1.2:
 28-03-2008:
   * Configure didn't set the path to the conf file.
   * spindown init script now checks if the lockfile is present.
+  * fixed very stupid bug, used == instead of =
 
 27-03-2008:
   * CONFPATH in spindown wasn't set with configure
