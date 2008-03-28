@@ -4,6 +4,7 @@ Spindown v0.1.2:
   * Configure didn't set the path to the conf file.
   * spindown init script now checks if the lockfile is present.
   * fixed very stupid bug, used == instead of =
+  * spindown now also support make dist
 
 27-03-2008:
   * CONFPATH in spindown wasn't set with configure
