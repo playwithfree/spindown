@@ -1,3 +1,12 @@
+Spindown v0.1.3:
+
+29-03-2008:
+  * configure is not needed anymore, the spindown init script can now easly be used in
+    debug mode. Just call it with DEBUG=1 ./spindown [OPTION]
+  * They way the daemon is lauched and stopped has been changed.
+
+===============================================================================
+
 Spindown v0.1.2:
 
 28-03-2008:
