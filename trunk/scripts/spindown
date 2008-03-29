@@ -3,7 +3,6 @@
 SPINDOWNPATH="/sbin/spindownd"
 LOCKFILE="/var/lock/spindown.lock"
 FIFOPATH="./spindown.fifo"
-PIDPATH="./spindown.pid"
 CONFPATH="./spindown.conf"
 
 # echo's the string and then the amount of spaces needed to fill it till length
@@ -56,29 +55,42 @@ status() {
 
 start() {
 
-  if [ -f ${LOCKFILE} ]; then
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
   
-    echo "The lockfile: \"${LOCKFILE}\" allready exists, this means the daemon is allready running. If you think this is wrong, please delete it by hand."
+  if [ $CHECK -lt 1 ]; then
   
-  else
-
     echo -n "Starting spindownd daemon: "
-    ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH} 1> ${PIDPATH}
-### Create the lock file ###
+    ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH}
+    ### Create the lock file ###
     touch ${LOCKFILE}
-    echo "server startup"
+    echo "...done"
+    
+  else
   
+    echo "Demon already running.";
+    
   fi
   
 }
 
 stop() {
-        echo -n "Stopping spindownd daemon: "
-        kill `cat ${PIDPATH}`
-### Now, delete the lock file ###
-        rm -f ${LOCKFILE}
-        rm -f ${PIDPATH}
-        echo "stopped"
+
+  CHECK=`ps auxw | grep -i iceweasel | grep -v grep | wc -l`
+  
+  if [ $CHECK -gt 0 ]; then
+
+    echo -n "Stopping spindownd daemon: "
+    pkill spindownd
+    ### Now, delete the lock file ###
+    rm -f ${LOCKFILE}
+    echo "...stopped."
+      
+  else
+  
+    echo "Daemon not running."
+    
+  fi
+  
 }
 
 ### main logic ###
