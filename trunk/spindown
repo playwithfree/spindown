@@ -1,0 +1,132 @@
+#!/bin/bash
+
+# Call this file like this: "DEBUG=1 ./spindown [OPTION]"
+# if you want to run in debug mode.
+
+if [ $DEBUG ]; then
+
+  SPINDOWNPATH="./spindownd"
+  LOCKFILE="./spindown.lock"
+  FIFOPATH="./spindown.fifo"
+  CONFPATH="./spindown.conf"
+
+else
+
+  SPINDOWNPATH="/sbin/spindownd"
+  LOCKFILE="/var/lock/spindown.lock"
+  FIFOPATH="/var/run/spindown.fifo"
+  CONFPATH="/etc/spindown.conf"
+
+fi
+
+# echo's the string and then the amount of spaces needed to fill it till length
+# $1 the string
+# $2 the desired length
+spaces() {
+  declare -i i
+  declare -i diff
+  diff=$2-${#1}
+  
+  if [ $diff -lt 1 ]; then
+    diff=1
+  fi
+
+  echo -n $1
+
+  i=0
+  while [ $i -lt $diff ]; do
+    echo -n " "
+    i=$i+1
+  done
+}
+
+status() {
+  declare -i i
+  i=0
+  
+  spaces "name" 15
+  spaces "watched" 15
+  spaces "active" 15
+  spaces "idle-time" 15
+  echo ""
+  
+  for line in `cat $FIFOPATH`; do
+    
+    remainder=`expr $i % 4`
+    if [ $remainder -eq 0 -a $i -ne 0 ]; then
+      echo ""
+      spaces $line 15
+    else
+      spaces $line 15
+    fi
+    
+    i=$i+1
+  done
+  
+  echo ""
+}
+
+start() {
+
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -lt 1 ]; then
+  
+    echo -n "Starting spindownd daemon: "
+    ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH}
+    ### Create the lock file ###
+    touch ${LOCKFILE}
+    echo "...done"
+    
+  else
+  
+    echo "Demon already running.";
+    
+  fi
+  
+}
+
+stop() {
+
+  CHECK=`ps auxw | grep -i iceweasel | grep -v grep | wc -l`
+  
+  if [ $CHECK -gt 0 ]; then
+
+    echo -n "Stopping spindownd daemon: "
+    pkill spindownd
+    ### Now, delete the lock file ###
+    rm -f ${LOCKFILE}
+    echo "...stopped."
+      
+  else
+  
+    echo "Daemon not running."
+    
+  fi
+  
+}
+
+### main logic ###
+case "$1" in
+  "start")
+        start
+        ;;
+  "stop")
+        stop
+        ;;
+  "status")
+        #by first putting the output from status in a variable and then displaying
+        #it, we make sure the output appears on the screen in one go.
+        STATUS=`status`
+        echo "$STATUS"
+        ;;
+  "restart"|"reload"|"condrestart")
+        stop
+        start
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+
+exit 0
