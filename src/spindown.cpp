@@ -193,10 +193,7 @@ void Spindown::daemonize()
   /* If we got a good PID, then
   we can exit the parent process. */
   if (pid > 0)
-  {
-    cout << pid << endl;
     exit(EXIT_SUCCESS);
-  }
 
   /* Change the file mode mask */
   umask(0);
