@@ -23,33 +23,41 @@ fi
 # $1 the string
 # $2 the desired length
 spaces() {
+
   declare -i i
   declare -i diff
   diff=$2-${#1}
   
+  #at least one space between values
   if [ $diff -lt 1 ]; then
     diff=1
   fi
 
+  #print the string
   echo -n $1
 
+  #print the remaining spaces
   i=0
   while [ $i -lt $diff ]; do
     echo -n " "
     i=$i+1
   done
+
 }
 
+#prints table with status about the disks
 status() {
-  declare -i i
-  i=0
   
+  #print the header of the table
   spaces "name" 15
   spaces "watched" 15
   spaces "active" 15
   spaces "idle-time" 15
   echo ""
   
+  #build the rows with disks
+  declare -i i
+  i=0
   for line in `cat $FIFOPATH`; do
     
     remainder=`expr $i % 4`
@@ -80,7 +88,7 @@ start() {
     
   else
   
-    echo "Demon already running.";
+    echo "Daemon already running.";
     
   fi
   
@@ -115,10 +123,8 @@ case "$1" in
         stop
         ;;
   "status")
-        #by first putting the output from status in a variable and then displaying
-        #it, we make sure the output appears on the screen in one go.
-        STATUS=`status`
-        echo "$STATUS"
+        #by outputting it like this it all appears on the screen in one time
+        echo "`status`"
         ;;
   "restart"|"reload"|"condrestart")
         stop
