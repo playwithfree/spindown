@@ -48,6 +48,15 @@ spaces() {
 #prints table with status about the disks
 status() {
   
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -ne 1 ]; then
+    
+    echo "Daemon not running."
+    return
+    
+  fi
+  
   #print the header of the table
   spaces "name" 15
   spaces "watched" 15
@@ -96,7 +105,7 @@ start() {
 
 stop() {
 
-  CHECK=`ps auxw | grep -i iceweasel | grep -v grep | wc -l`
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
   
   if [ $CHECK -gt 0 ]; then
 

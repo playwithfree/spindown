@@ -65,6 +65,9 @@ class Spindown : public Thread
     //update the statistics
     void updateDiskstats();
     
+    //check for duplicate disks
+    void checkDuplicates();
+    
     //read configuration file
     void readConfig();
     

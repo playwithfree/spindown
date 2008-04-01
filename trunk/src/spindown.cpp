@@ -1,22 +1,22 @@
 /**
  * Spindown is a daemon that can spindown idle discs.
  * Copyright (C) 2008  Dimitri Michaux <dimitri.michaux@gmail.com>
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * http://www.gnu.org/licenses/gpl.html
- * 
+ *
  * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
  */
 
@@ -72,6 +72,7 @@ int Spindown::execute()
   while( true )
   {
     updateDevNames();
+    checkDuplicates();
     updateDiskstats();
     sleep( cycleTime );
   }
@@ -110,6 +111,22 @@ void Spindown::updateDiskstats()
         disks[i]->update( CMD_DISKSTATS, str );
     }
     fin.close();
+  }
+}
+
+void Spindown::checkDuplicates()
+{
+  for( int i=0 ; i < disks.size() ; i++ )
+  {
+    for( int j=0 ; j < disks.size() ; j++ )
+    {
+      //when i and j are the same we are comparing the same disk, so ignore
+      if( disks[i]->getName()==disks[j]->getName() && i!=j )
+      {
+        disks[i]->setDuplicate( true );
+        disks[j]->setDuplicate( true );
+      }
+    }
   }
 }
 
