@@ -49,6 +49,7 @@ class Disk
 	 *
 	 * @param	string	id	The id of the disc to spindown (id's in /dev/disk/by-id).
 	 * @param	bool	sd	Spin this disc down or not.
+         * @param       string  sgPars  the parameters to use with sg_start
 	 */
         Disk( string id, bool sd, string sgPars = "--stop" );
 	
@@ -84,6 +85,14 @@ class Disk
         
         unsigned int idleTime();
         
+        /**
+         * Tells the disk that it has one or more duplicates.
+         * This means the disk is not going to be spundown.
+         * 
+         * @param       bool    dup   set true if there is/are (a) duplicate(s)
+         */
+        void setDuplicate( bool dup );
+        
 	/**
 	 * Set if the disc has to be spundown
 	 * 
@@ -99,6 +108,7 @@ class Disk
         time_t lastActive;
         bool active;
 	bool spinDown;
+        bool duplicate;
         
         /**
          * Finds the dev name for the current dev id and puts it in devName

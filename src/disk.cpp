@@ -51,6 +51,7 @@ Disk::Disk( string id, bool sd, string sgPars )
   
   active = true;
   spinDown = sd;
+  duplicate = false;
 }
 
 void Disk::update( unsigned char command, string value )
@@ -97,7 +98,7 @@ void Disk::updateStats( string input )
     
     //spindown the disk if it is idle for long enough
     //and when it should be spundown and when it is active
-    if( idleTime()>=spinDownTime && active && spinDown )
+    if( idleTime()>=spinDownTime && active && spinDown && duplicate )
       doSpinDown();
     
     totalBlocks = newRead + newWritten;
@@ -118,7 +119,10 @@ void Disk::doSpinDown()
 void Disk::findDevName( string dev )
 {
   if( dev == "." )
+  {
     devName = "";
+    duplicate = false;
+  }
   else if( dev == devId )
   {
     string buffer;
@@ -153,4 +157,9 @@ bool Disk::isActive()
 unsigned int Disk::idleTime()
 {
   return (unsigned int)difftime( time(NULL), lastActive );
+}
+
+void Disk::setDuplicate( bool dup )
+{
+  duplicate = dup;
 }
