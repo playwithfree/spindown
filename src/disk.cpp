@@ -26,9 +26,11 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include <vector>
 
 using std::string;
 using std::ostringstream;
+using std::vector;
 
 #include <time.h>
 #include <dirent.h>
@@ -38,6 +40,8 @@ using std::ostringstream;
 #include <sys/stat.h>
 
 unsigned int Disk::spinDownTime = 7200;
+
+vector<Disk*> Disk::disks;
 
 Disk::Disk( string id, bool sd, string sgPars )
 {
@@ -51,7 +55,21 @@ Disk::Disk( string id, bool sd, string sgPars )
   
   active = true;
   spinDown = sd;
-  duplicate = false;
+  
+  //put the disk in the array.
+  disks.push_back( this );
+}
+
+Disk::~Disk()
+{
+  for( vector<Disk*>::iterator i = disks.begin() ; i != disks.end() ; i++ )
+  {
+    if( *i == this )
+    {
+      disks.erase( i );
+      break;
+    }
+  }
 }
 
 void Disk::update( unsigned char command, string value )
@@ -98,7 +116,7 @@ void Disk::updateStats( string input )
     
     //spindown the disk if it is idle for long enough
     //and when it should be spundown and when it is active
-    if( idleTime()>=spinDownTime && active && spinDown && duplicate )
+    if( idleTime()>=spinDownTime && active && spinDown && hasDuplicates() )
       doSpinDown();
     
     totalBlocks = newRead + newWritten;
@@ -119,10 +137,7 @@ void Disk::doSpinDown()
 void Disk::findDevName( string dev )
 {
   if( dev == "." )
-  {
     devName = "";
-    duplicate = false;
-  }
   else if( dev == devId )
   {
     string buffer;
@@ -137,6 +152,17 @@ void Disk::findDevName( string dev )
     //remove ../../ from the link target
     devName = buffer.substr(buffer.find_last_of("/")+1,buffer.size()-buffer.find_last_of("/") );
   }
+}
+
+bool Disk::hasDuplicates()
+{
+  for( int i=0 ; i < disks.size() ; i++ )
+  {
+    if( disks[i]->getName() == devName && disks[i] != this  )
+      return true;
+  }
+  
+  return false;
 }
 
 string Disk::getName()
@@ -157,9 +183,4 @@ bool Disk::isActive()
 unsigned int Disk::idleTime()
 {
   return (unsigned int)difftime( time(NULL), lastActive );
-}
-
-void Disk::setDuplicate( bool dup )
-{
-  duplicate = dup;
 }
