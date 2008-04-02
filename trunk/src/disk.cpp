@@ -43,9 +43,23 @@ unsigned int Disk::spinDownTime = 7200;
 
 vector<Disk*> Disk::disks;
 
-Disk::Disk( string id, bool sd, string sgPars )
+Disk::Disk( string id, string name, bool sd, string sgPars )
 {
+  if( id == "" && name == "" )
+  {
+    std::cerr << "Error: there is a disk with no name or id in your configurationfile!" << std::endl;
+    exit( 1 );
+  }
+  
+  if( id != "" && name != "" )
+  {
+    std::cerr << "Error: there is a disk with both name and id in your configurationfile!" << std::endl
+              << "(Hint: id: " << id << " name: " << name << ")" << std::endl;
+    exit( 1 );
+  }
+  
   devId = id;
+  devName = name;
   
   totalBlocks = 0;
   
@@ -123,21 +137,15 @@ void Disk::updateStats( string input )
   }
 }
 
-void Disk::doSpinDown()
-{
-  ostringstream command;
-  //build command + execute
-  command << "sg_start " << sgParameters << " /dev/" << devName;
-  system( command.str().data() );
-
-  //set disk as inactive
-  active = false;
-}
-
 void Disk::findDevName( string dev )
 {
-  if( dev == "." )
+  //no need to do this when the id is empty, this means we are using a nonswapable disk
+  if( devId == "" )
+    return;
+  //we use . to reset the device name
+  else if( dev == "." )
     devName = "";
+  //do the normal thing
   else if( dev == devId )
   {
     string buffer;
@@ -152,6 +160,17 @@ void Disk::findDevName( string dev )
     //remove ../../ from the link target
     devName = buffer.substr(buffer.find_last_of("/")+1,buffer.size()-buffer.find_last_of("/") );
   }
+}
+
+void Disk::doSpinDown()
+{
+  ostringstream command;
+  //build command + execute
+  command << "sg_start " << sgParameters << " /dev/" << devName;
+  system( command.str().data() );
+
+  //set disk as inactive
+  active = false;
 }
 
 bool Disk::hasDuplicates()

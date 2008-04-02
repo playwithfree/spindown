@@ -169,13 +169,11 @@ void Spindown::readConfig()
     //disk?
     else if( section.substr(0,section.find_first_of(" ")) == "disk" )
     {
-      input = iniparser_getstring(ini, string(section+":id").data(), (char*)"");
-      if( input != "" )
-      {
-        //no need to pot the disk in an array, they are automatically stored in Diks::disks
-        new Disk(input, iniparser_getboolean(ini, string(section+":spindown").data(), 0),
-                         iniparser_getstring(ini, string(section+":command").data(), (char*)"--stop"));
-      }
+      //no need to store the object somewhere, they are automatically stored in Diks::disks
+      new Disk( iniparser_getstring(ini, string(section+":id").data(), (char*)""),
+                iniparser_getstring(ini, string(section+":name").data(), (char*)""),
+                iniparser_getboolean(ini, string(section+":spindown").data(), 0),
+                iniparser_getstring(ini, string(section+":command").data(), (char*)"--stop"));
     }
   }
   

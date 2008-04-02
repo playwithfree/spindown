@@ -51,12 +51,14 @@ class Disk
         
 	/**
 	 * Constructor: Create a new disc to monitor.
+         * Either name or id should be empty, but not both
 	 *
 	 * @param	string	id	The id of the disc to spindown (id's in /dev/disk/by-id).
+         * @param       string  name    The device name
 	 * @param	bool	sd	Spin this disc down or not.
          * @param       string  sgPars  the parameters to use with sg_start
 	 */
-        Disk( string id, bool sd, string sgPars = "--stop" );
+        Disk( string id, string name, bool sd, string sgPars = "--stop" );
         
         ~Disk();
 	
