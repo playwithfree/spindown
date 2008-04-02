@@ -125,7 +125,7 @@ void Spindown::checkFifo()
 
     for( int i=0 ; i < Disk::disks.size() ; i++ )
     {
-      if( Disk::disks[i]->getName() != "" )
+      if( Disk::disks[i]->isPresent() )
       {
         fifoOut << Disk::disks[i]->getName()
                 << " " << Disk::disks[i]->isWatched()
@@ -167,13 +167,14 @@ void Spindown::readConfig()
       cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
     }
     //disk?
-    else if( section.substr(0,section.find_first_of(" ")) == "disk" )
+    else if( section.substr(0,4) == "disk" )
     {
-      //no need to store the object somewhere, they are automatically stored in Diks::disks
-      new Disk( iniparser_getstring(ini, string(section+":id").data(), (char*)""),
-                iniparser_getstring(ini, string(section+":name").data(), (char*)""),
+      //no need to store the object somewhere, they are automatically stored in Disk::disks
+      new Disk( iniparser_getstring (ini, string(section+":id").data(),       (char*)""),
+                iniparser_getstring (ini, string(section+":name").data(),     (char*)""),
                 iniparser_getboolean(ini, string(section+":spindown").data(), 0),
-                iniparser_getstring(ini, string(section+":command").data(), (char*)"--stop"));
+                iniparser_getstring (ini, string(section+":command").data(),  (char*)"--stop")
+              );
     }
   }
   
@@ -226,7 +227,7 @@ void Spindown::parseCommandline(int argc, char* argv[] )
     
     //print version information
     //version number is set in general.h
-    if( arg=="-v" || arg=="--version" )
+    if( arg=="-V" || arg=="--version" )
     {
       cout << "spindownd "<< VERSION << endl
            << "This is spindownd - a daemon that spinsdown idle disks" << endl
@@ -250,7 +251,7 @@ void Spindown::parseCommandline(int argc, char* argv[] )
            << "  -c, --config-file     Path to the configuration file. The default is" << endl
            << "                          spindown.conf in the current directory." << endl
            << "  -h, --help            Displays this text." << endl
-           << "  -v, --version         Prints the version number." << endl << endl
+           << "  -V, --version         Prints the version number." << endl << endl
            << "For more information and contact visit <http://projects.dimis-site.be>." <<endl;
       exit(EXIT_SUCCESS);
     }
