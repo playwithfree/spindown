@@ -31,6 +31,9 @@
 #include "general.h"
 
 #include <string>
+#include <vector>
+
+using std::vector;
 using std::string;
 
 #include <ctime>
@@ -44,6 +47,8 @@ class Disk
          */
         static unsigned int spinDownTime;
         
+        static vector<Disk*> disks;
+        
 	/**
 	 * Constructor: Create a new disc to monitor.
 	 *
@@ -52,6 +57,8 @@ class Disk
          * @param       string  sgPars  the parameters to use with sg_start
 	 */
         Disk( string id, bool sd, string sgPars = "--stop" );
+        
+        ~Disk();
 	
         /**
          * Update a paramaters from the disc.
@@ -85,14 +92,6 @@ class Disk
         
         unsigned int idleTime();
         
-        /**
-         * Tells the disk that it has one or more duplicates.
-         * This means the disk is not going to be spundown.
-         * 
-         * @param       bool    dup   set true if there is/are (a) duplicate(s)
-         */
-        void setDuplicate( bool dup );
-        
 	/**
 	 * Set if the disc has to be spundown
 	 * 
@@ -108,7 +107,6 @@ class Disk
         time_t lastActive;
         bool active;
 	bool spinDown;
-        bool duplicate;
         
         /**
          * Finds the dev name for the current dev id and puts it in devName
@@ -135,6 +133,9 @@ class Disk
          * Spinsdown the disc with the right command.
          */
         void doSpinDown();
+        
+        //check for duplicate disks
+        bool hasDuplicates();
 };
 
 #endif

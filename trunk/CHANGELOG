@@ -1,5 +1,8 @@
 Spindown v0.1.3:
 
+02-04-2008:
+  * Changed the way the array with disks is stored, this makes it easier for me.
+
 01-04-2008:
   * Now it is impossible to have duplicate disks. When a duplicate is found both of them
     are ignored.

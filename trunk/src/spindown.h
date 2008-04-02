@@ -45,8 +45,6 @@ class Spindown : public Thread
     void checkFifo();
     
   private:
-    //this is the array we use to keep all the disk we are watching in
-    vector<Disk*> disks;
     //time between two cycles
     unsigned int cycleTime;
     //path to the fifo
@@ -64,9 +62,6 @@ class Spindown : public Thread
     
     //update the statistics
     void updateDiskstats();
-    
-    //check for duplicate disks
-    void checkDuplicates();
     
     //read configuration file
     void readConfig();

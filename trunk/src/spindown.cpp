@@ -72,7 +72,6 @@ int Spindown::execute()
   while( true )
   {
     updateDevNames();
-    checkDuplicates();
     updateDiskstats();
     sleep( cycleTime );
   }
@@ -91,8 +90,8 @@ void Spindown::updateDevNames()
   {
     while (ep = readdir (dp))
     {
-      for( int i=0 ; i < disks.size() ; i++ )
-        disks[i]->update( CMD_BYID, ep->d_name );
+      for( int i=0 ; i < Disk::disks.size() ; i++ )
+        Disk::disks[i]->update( CMD_BYID, ep->d_name );
     }
     (void) closedir (dp);
   }
@@ -107,26 +106,10 @@ void Spindown::updateDiskstats()
   {
     while( fin.getline(str,CHAR_BUF) )
     {
-      for( int i=0 ; i < disks.size() ; i++ )
-        disks[i]->update( CMD_DISKSTATS, str );
+      for( int i=0 ; i < Disk::disks.size() ; i++ )
+        Disk::disks[i]->update( CMD_DISKSTATS, str );
     }
     fin.close();
-  }
-}
-
-void Spindown::checkDuplicates()
-{
-  for( int i=0 ; i < disks.size() ; i++ )
-  {
-    for( int j=0 ; j < disks.size() ; j++ )
-    {
-      //when i and j are the same we are comparing the same disk, so ignore
-      if( disks[i]->getName()==disks[j]->getName() && i!=j )
-      {
-        disks[i]->setDuplicate( true );
-        disks[j]->setDuplicate( true );
-      }
-    }
   }
 }
 
@@ -140,14 +123,14 @@ void Spindown::checkFifo()
   {
     fifoOut.open(fifoPath.data());
 
-    for( int i=0 ; i < disks.size() ; i++ )
+    for( int i=0 ; i < Disk::disks.size() ; i++ )
     {
-      if( disks[i]->getName() != "" )
+      if( Disk::disks[i]->getName() != "" )
       {
-        fifoOut << disks[i]->getName()
-                << " " << disks[i]->isWatched()
-                << " " << disks[i]->isActive()
-                << " " << disks[i]->idleTime()
+        fifoOut << Disk::disks[i]->getName()
+                << " " << Disk::disks[i]->isWatched()
+                << " " << Disk::disks[i]->isActive()
+                << " " << Disk::disks[i]->idleTime()
                 << endl;
       }
     }
@@ -188,8 +171,11 @@ void Spindown::readConfig()
     {
       input = iniparser_getstring(ini, string(section+":id").data(), (char*)"");
       if( input != "" )
-        disks.push_back( new Disk(input, iniparser_getboolean(ini, string(section+":spindown").data(), 0),
-                         iniparser_getstring(ini, string(section+":command").data(), (char*)"--stop")) );
+      {
+        //no need to pot the disk in an array, they are automatically stored in Diks::disks
+        new Disk(input, iniparser_getboolean(ini, string(section+":spindown").data(), 0),
+                         iniparser_getstring(ini, string(section+":command").data(), (char*)"--stop"));
+      }
     }
   }
   
