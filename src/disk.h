@@ -94,6 +94,8 @@ class Disk
         
         unsigned int idleTime();
         
+        bool isPresent();
+        
 	/**
 	 * Set if the disc has to be spundown
 	 * 

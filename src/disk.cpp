@@ -25,11 +25,9 @@
 
 #include <iostream>
 #include <string>
-#include <sstream>
 #include <vector>
 
 using std::string;
-using std::ostringstream;
 using std::vector;
 
 #include <time.h>
@@ -139,7 +137,7 @@ void Disk::updateStats( string input )
 
 void Disk::findDevName( string dev )
 {
-  //no need to do this when the id is empty, this means we are using a nonswapable disk
+  //no need to do this when the id is empty, this means this is a nonswapable disk
   if( devId == "" )
     return;
   //we use . to reset the device name
@@ -164,10 +162,10 @@ void Disk::findDevName( string dev )
 
 void Disk::doSpinDown()
 {
-  ostringstream command;
+  string command;
   //build command + execute
-  command << "sg_start " << sgParameters << " /dev/" << devName;
-  system( command.str().data() );
+  command = "sg_start " + sgParameters + " /dev/" + devName;
+  system( command.data() );
 
   //set disk as inactive
   active = false;
@@ -202,4 +200,12 @@ bool Disk::isActive()
 unsigned int Disk::idleTime()
 {
   return (unsigned int)difftime( time(NULL), lastActive );
+}
+
+bool Disk::isPresent()
+{
+  if( !hasDuplicates() && devName != "" )
+    return true;
+  else
+    return false;
 }
