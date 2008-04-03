@@ -43,12 +43,14 @@ vector<Disk*> Disk::disks;
 
 Disk::Disk( string id, string name, bool sd, string sgPars )
 {
+  //if both names are empty something is wrong
   if( id == "" && name == "" )
   {
     std::cerr << "Error: there is a disk with no name or id in your configurationfile!" << std::endl;
     exit( 1 );
   }
   
+  //one has to be empty
   if( id != "" && name != "" )
   {
     std::cerr << "Error: there is a disk with both name and id in your configurationfile!" << std::endl
@@ -86,10 +88,16 @@ Disk::~Disk()
 
 void Disk::update( unsigned char command, string value )
 {
-  if( command == CMD_DISKSTATS )
-    updateStats( value );
-  else if( command == CMD_BYID )
-    findDevName( value );
+  switch( command )
+  {
+    case CMD_DISKSTATS:
+      updateStats( value );
+      break;
+    
+    case CMD_BYID:
+      findDevName( value );
+      break;
+  }
 }
 
 void Disk::updateStats( string input )
@@ -99,7 +107,7 @@ void Disk::updateStats( string input )
     totalBlocks = 0;
     return;
   }
-  
+
   string devNameInp;  //the name of the device read from the configuration
   unsigned int newRead;
   unsigned int newWritten;
@@ -108,11 +116,11 @@ void Disk::updateStats( string input )
   devNameInp.resize( 32 );
 
   //scan the input for the information we need
-  sscanf(input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
+  sscanf( input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
 
   //We first need to remove all the null characters from the string
   devNameInp.resize( devNameInp.find_first_of((char)0) );
-  
+
   //are we on the line of the right device?
   if( devNameInp == devName )
   {
@@ -125,12 +133,12 @@ void Disk::updateStats( string input )
       lastActive = time(NULL);
       active = true;
     }
-    
+
     //spindown the disk if it is idle for long enough
     //and when it should be spundown and when it is active
     if( idleTime()>=spinDownTime && active && spinDown && !hasDuplicates() )
       doSpinDown();
-    
+
     totalBlocks = newRead + newWritten;
   }
 }
@@ -178,7 +186,7 @@ bool Disk::hasDuplicates()
     if( disks[i]->getName() == devName && disks[i] != this  )
       return true;
   }
-  
+
   return false;
 }
 

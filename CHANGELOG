@@ -1,5 +1,10 @@
 Spindown v0.1.3:
 
+03-04-2008:
+  * Check for sg_start at startup.
+  * Output from init script now makes more sence when there is an error.
+  * Code cleanups + added documentation
+
 02-04-2008:
   * Changed the way the array with disks is stored, this makes it easier for me.
   * Disks check automatically for duplicates

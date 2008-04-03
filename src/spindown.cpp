@@ -169,7 +169,7 @@ void Spindown::readConfig()
       Disk::spinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
       
       if( Disk::spinDownTime <= 0 )
-        Disk::spinDownTime = 1; //one is still low, but 0 would be disaster
+        Disk::spinDownTime = 7200;
       
       cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
     }
@@ -268,7 +268,7 @@ void Spindown::parseCommandline(int argc, char* argv[] )
     {
       //set fifo path
       if( arg=="-f"||arg=="--fifo-path" )
-          fifoPath = relToAbs(argv[++i]);
+        fifoPath = relToAbs(argv[++i]);
         
       //set config file path
       else if( arg=="-c" || arg=="--config-file" )

@@ -40,36 +40,82 @@ using std::string;
 class Spindown : public Thread
 {
   public:
+    /**
+     * Constructor:
+     * Does some basic checks and initialisations.
+     * 
+     * @param   int     argc
+     * @param   char*[] argv
+     */
     Spindown(int, char* []);
+    
+    /**
+     * This function will run as a thread.
+     * It does the general loop.
+     */
     int execute();
+    
+    /**
+     * A loop that checks the fifo and then writes to it when it is opend
+     */
     void checkFifo();
     
   private:
-    //time between two cycles
+    /**
+     * Time between two cycles in seconds
+     */
     unsigned int cycleTime;
-    //path to the fifo
+    
+    /**
+     * Path to the fifo
+     */
     string fifoPath;
-    //path to configuration file
+    
+    /**
+     * Path to the configuration file
+     */
     string confPath;
-    //path from where the script was started
+    
+    /**
+     * Path from where the script was started
+     */
     string runPath;
     
-    //make a daemon from the program
+    /**
+     * Turn the program into a daemon.
+     * Forks, changes the dir to "/" and closes stdin stdout stderr
+     */
     void daemonize();
     
-    //update the names so they correspond to the id's
+    /**
+     * Reads all the files in /dev/disk/by-id and passes theses results
+     * to the disks.
+     */
     void updateDevNames();
     
-    //update the statistics
+    /**
+     * Reads the file /proc/diskstats and passes this line by line to
+     * every disk.
+     */
     void updateDiskstats();
     
-    //read configuration file
+    /**
+     * Reads the config file from /proc/diskstats and passes it
+     * line by line to every disk.
+     */
     void readConfig();
     
-    //parse commandline parameters
+    /**
+     * Parses the command line parameters.
+     * 
+     * @param   int     argc
+     * @param   char*[] argv
+     */
     void parseCommandline(int, char* []);
     
-    //replace the point in a path with the current dir
-    //it's good to have absolute paths when your process chdirs.
+    /**
+     * Transforms relative paths to absolute ones.
+     * This has to be done because we change dir with daemonize.
+     */
     string relToAbs( string );
 };
