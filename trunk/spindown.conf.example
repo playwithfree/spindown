@@ -1,0 +1,37 @@
+[General]
+cycle-time  = 60    # Number of seconds between two cycles
+idle-time   = 3600  # The time in seconds a disk has to be idle before it is spundown.
+                    # Do not use a value that is to small (less than 3600) unless you
+                    # know what you are doing.
+
+# Add as much disks as you want.
+#
+# The following parameters are allowed: id, name, spindown and command.
+#
+#   - id:
+#       You can find the id by doing "ls -l /dev/disk/by-id/", the advantage of using
+#       id over name is that you can swap disks while the daemon is running and it
+#       doesn't matter that the device name changes.
+#
+#   - name:
+#       The name can be given up like this: sda, sdb, hda, hdc, ...
+#
+#   - spindown:
+#       This is a boolean value, put it on 1 if you want spindown to spindown the disk
+#       or put it on 0 of you want spindown to leave it untouched. The default is 0.
+#
+#   - command:
+#       The parameter to use to spindown the disk using sg_start. The default is "--stop".
+#       The device name will be automatically added behind this value.
+#
+# Only name or id are needed, but not both.
+
+# Examples:
+# [Disk 0]
+# id = ata-Hitachi_HTS54161-SB2404SJHD07JE
+# spindown = 1
+
+# [Disk 1]
+# name = sda
+# spindown = 1
+# command = --pc=2
