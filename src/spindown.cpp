@@ -37,6 +37,7 @@ using std::ofstream;
 using std::ifstream;
 using std::ios;
 using std::cout;
+using std::cerr;
 using std::endl;
 
 #include <dirent.h>
@@ -51,6 +52,12 @@ Spindown::Spindown( int argc, char* argv[] )
   char buf[CHAR_BUF];
   //this function has to be called before daemonize because it changes the path
   runPath = getcwd( buf, CHAR_BUF );
+  
+  if( system("sg_start -V 2> /dev/null") != 0 )
+  {
+    cerr << "Error: The command sg_start is needed, but not found. Please install it." << endl;
+    exit( 1 );
+  }
   
   //when the user doesn't specify these file we look for them in the current directory
   fifoPath = relToAbs( "./spindown.fifo" );
