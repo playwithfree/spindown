@@ -128,7 +128,7 @@ void Disk::updateStats( string input )
     
     //spindown the disk if it is idle for long enough
     //and when it should be spundown and when it is active
-    if( idleTime()>=spinDownTime && active && spinDown && hasDuplicates() )
+    if( idleTime()>=spinDownTime && active && spinDown && !hasDuplicates() )
       doSpinDown();
     
     totalBlocks = newRead + newWritten;
