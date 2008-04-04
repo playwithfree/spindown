@@ -76,9 +76,14 @@ Disk::Disk( string id, string name, bool sd, string sgPars )
 
 Disk::~Disk()
 {
-  Disk* ptr = this;
-  
-  disks.erase( (vector<Disk*>::iterator)(&ptr) );
+  for( vector<Disk*>::iterator i = disks.begin() ; i != disks.end() ; i++ )
+  {
+    if( *i == this )
+    {
+      disks.erase( i );
+      break;
+    }
+  }
 }
 
 void Disk::update( unsigned char command, string value )
