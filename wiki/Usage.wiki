@@ -18,7 +18,7 @@ sdb            1              0              5674
 You can also start the daemon yourself. If you would like to do this, please read the build in help function.
 
 {{{
-$ ./spindownd --help
+$ spindownd --help
 Usage: spindownd [OPTION]...
 spindownd is a daemon that spinsdown idle disks.
 
