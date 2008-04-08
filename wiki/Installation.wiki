@@ -3,8 +3,8 @@
 First you need to download the source code and compile it. Because there are no nasty dependencies (except for sg3_start), this should be no problem.
 
 {{{
-    $ tar xvzf spindown-vx.x.x.tar.gz
-    $ cd spindown-vx.x.x.tar.gz
+    $ tar xvzf spindown-x.x.x.tar.gz
+    $ cd spindown-x.x.x.tar.gz
     $ make
     # make install
 }}}
