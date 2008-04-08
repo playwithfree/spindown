@@ -1,15 +1,3 @@
-=Installation=
-
-First you need to download the source code and compile it. Because there are no nasty dependencies (except for sg3_start), this should be no problem.
-
-{{{
-    $ tar xvzf spindown-vx.x.x.tar.gz
-    $ cd spindown-vx.x.x.tar.gz
-    $ ./configure
-    $ make
-    # make install
-}}}
-
 =Configuration=
 
 After compiling and installing the deamon you still need to configure it. Do this by editing the sample configuration file (spindown.conf.example) with your favorite editor. Once you are satisfied with the settings save the file and copy it to /etc/spindown.conf.
