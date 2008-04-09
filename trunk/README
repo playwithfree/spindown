@@ -1,5 +1,4 @@
 To make an installation type:
-  # ./configure
   # make
   # make install
 
