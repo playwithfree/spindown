@@ -1,3 +1,4 @@
+#labels Phase-Deploy,Featured
 =Usage=
 
 Now you have your configuration file it is time to start the daemon:
