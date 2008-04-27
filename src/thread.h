@@ -2,11 +2,13 @@
 
 class Thread
 {
-   public:
-      Thread();
+  public:
+    Thread();
       
-      void start();
-      static void* run(void* pContext);
+    void start();
+    static void* run(void* pContext);
+    static void* handleSignals(void* pContext);
       
-      virtual int execute(){};
+    virtual int execute(){};
+    virtual int signalHandler(){};
 };

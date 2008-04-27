@@ -62,6 +62,7 @@ status() {
   spaces "watched" 15
   spaces "active" 15
   spaces "idle-time" 15
+  spaces "spindown-time" 15
   echo ""
   
   #build the rows with disks
@@ -69,7 +70,7 @@ status() {
   i=0
   for line in `cat $FIFOPATH`; do
     
-    remainder=`expr $i % 4`
+    remainder=`expr $i % 5`
     if [ $remainder -eq 0 -a $i -ne 0 ]; then
       echo ""
       spaces $line 15
@@ -129,6 +130,25 @@ stop() {
   
 }
 
+reload() {
+
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -gt 0 ]; then
+
+    echo -n "Sending SIGHUP to spindownd daemon: "
+    pkill -HUP spindownd
+    echo "...ok."
+
+  else
+  
+    echo "Daemon not running."
+    exit 1
+    
+  fi
+  
+}
+
 case "$1" in
   "start")
         start
@@ -140,9 +160,12 @@ case "$1" in
         #by outputting it like this it all appears on the screen in one time
         echo "`status`"
         ;;
-  "restart"|"reload"|"condrestart")
+  "restart"|"condrestart")
         stop
         start
+        ;;
+  "reload")
+        reload
         ;;
   *)
         echo "Usage: $0 {start|stop|restart|reload|status}"

@@ -1,7 +1,7 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
 VERSION = 0.1.3
-OBJS = disk.o thread.o spindown.o iniparser.o dictionary.o
+OBJS = diskset.o disk.o thread.o spindown.o iniparser.o dictionary.o
 CC = g++
 CFLAGS =-O1 -pthread
 SRC = src/
@@ -11,7 +11,7 @@ all: $(OBJS)
 	g++ $(CFLAGS) -o spindownd $(SRC)main.cpp $(OBJS)
 
 clean:
-	rm $(OBJS) spindownd
+	rm -f $(OBJS) spindownd
 
 install: all
 	install -D -m 755 spindownd $(sbindir)/spindownd
@@ -46,6 +46,9 @@ dist:
 	tar czf spindown-$(VERSION).tar.gz spindown-$(VERSION)
 	rm -d -r -f spindown-$(VERSION)
 
+diskset.o: $(SRC)diskset.cpp
+	g++ $(CFLAGS) -c $(SRC)diskset.cpp
+	
 disk.o: $(SRC)disk.cpp
 	g++ $(CFLAGS) -c $(SRC)disk.cpp
 	

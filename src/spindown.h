@@ -41,6 +41,11 @@ class Spindown : public Thread
 {
   public:
     /**
+     * The signals to block
+     */
+    static sigset_t signalSet;
+
+    /**
      * Constructor:
      * Does some basic checks and initialisations.
      * 
@@ -56,11 +61,24 @@ class Spindown : public Thread
     int execute();
     
     /**
+     * This function will run as a thread.
+     * It processes all signals
+     */
+    int signalHandler();
+
+    /**
      * A loop that checks the fifo and then writes to it when it is opend
      */
     void checkFifo();
     
+    /**
+     * Reads the config file from /proc/diskstats and passes it
+     * line by line to every disk.
+     */
+    void readConfig(string* confPath=0);
+
   private:
+
     /**
      * Time between two cycles in seconds
      */
@@ -82,28 +100,27 @@ class Spindown : public Thread
     string runPath;
     
     /**
+     * The disks to administer
+     */
+    DiskSet* disks;
+
+    /**
      * Turn the program into a daemon.
      * Forks, changes the dir to "/" and closes stdin stdout stderr
      */
     void daemonize();
     
     /**
-     * Reads all the files in /dev/disk/by-id and passes theses results
-     * to the disks.
+     * Installs all signal handlers
+     * Currently just catches SIGHUP to reload configuration
      */
-    void updateDevNames();
+    void installSignalHandlers();
     
     /**
      * Reads the file /proc/diskstats and passes this line by line to
      * every disk.
      */
-    void updateDiskstats();
-    
-    /**
-     * Reads the config file from /proc/diskstats and passes it
-     * line by line to every disk.
-     */
-    void readConfig();
+    void updateDiskstats(DiskSet* set);
     
     /**
      * Parses the command line parameters.
@@ -118,4 +135,9 @@ class Spindown : public Thread
      * This has to be done because we change dir with daemonize.
      */
     string relToAbs( string );
+
+    /**
+     * Mutex for thread synchronisation
+     */
+    pthread_mutex_t mutex;
 };
