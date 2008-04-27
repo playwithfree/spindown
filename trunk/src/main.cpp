@@ -30,7 +30,7 @@
 int main( int argc, char* argv[] )
 {
   Spindown spindown( argc, argv );
-  
+
   spindown.start();
   
   spindown.checkFifo();

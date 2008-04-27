@@ -29,103 +29,138 @@
 #define DISC_CLASS_H
 
 #include "general.h"
+#include "ininiparser3.0b/dictionary.h"
 
 #include <string>
 #include <vector>
 
 using std::vector;
 using std::string;
+using std::ostream;
 
 #include <ctime>
 
+class DiskSet;
+
 class Disk
 {
+
+    friend class DiskSet;
+
   public:
-    /**
-      * The time a disk needs to be idle before it's spundown.
-      * Time is in seconds
-      */
-    static unsigned int spinDownTime;
     
     /**
-      * This vectors contains all disks that currently present.
-      * You can use this vector, but shouldn't remove any disks from it.
-      */
-    static vector<Disk*> disks;
-    
+     * Factory method: Create a new disc to monitor.
+     * It reads all neccessary configurations from the passed dictionary
+     * The following directives are evaluated:
+     *    string id         The id of the disc to spindown (id's in /dev/disk/by-id).
+     *    string name       The device name
+     *    bool   spindown   Spin this disc down or not.
+     *    string command    The parameters to use with sg_start
+     *    int    idle-time  The time to wait before spinning down the disk
+     *
+     * @param	dictionary& dict The configuration to parse
+     * @param	string& section The configuration section of this disk
+     * @return Disk* Returns the new Disk object or 0 on error.
+     */
+    static Disk* create(dictionary& dict, string const & section);
+
     /**
-      * Constructor: Create a new disc to monitor.
-      * Either name or id should be empty, but not both
-      *
-      * @param	string	id	The id of the disc to spindown (id's in /dev/disk/by-id).
-      * @param       string  name    The device name
-      * @param	bool	sd	Spin this disc down or not.
-      * @param       string  sgPars  the parameters to use with sg_start
-      */
-    Disk( string id, string name, bool sd, string sgPars = "--stop" );
-    
+     * Constructor: Create a new disc to monitor.
+     * Either name or id should be empty, but not both
+     *
+     * @param	string	id	     The id of the disc to spindown (id's in /dev/disk/by-id).
+     * @param string   name    The device name
+     * @param	bool	   sd      Spin this disc down or not.
+     * @param string   sgPars  The parameters to use with sg_start
+     * @param int      sgTime  The time to wait before spinning down the disk
+     */
+    Disk( string id, string name, bool sd, string sgPars = "--stop", int sgTime = 0 );
+
+
     /**
-      * Removes the disk form the disks vector.
-      */
+     * Cleanup of the Disk object
+     */
     ~Disk();
     
     /**
-      * Update a paramaters from the disc.
-      * This function expects processes a line from either /dev/disk/by-id or
-      * either /proc/diskstats. This function automaticly grabs the values it needs
-      * form value.
-      * 
-      * @param       string  command This can either be "by-id" or "diskstats"
-      * @param       string  value   For diskstats a line from diskstats, for by-id
-      *                                one of the links to a device in by-id
-      */
+     * Update a paramaters from the disc.
+     * This function expects processes a line from either /dev/disk/by-id or
+     * either /proc/diskstats. This function automaticly grabs the values it needs
+     * form value.
+     * 
+     * @param       string  command This can either be "by-id" or "diskstats"
+     * @param       string  value   For diskstats a line from diskstats, for by-id
+     *                                one of the links to a device in by-id
+     */
     void update( unsigned char command, string value );
     
     /**
-      * Returns the id of the device as in /dev/disk/by-id
-      *
-      * @return 	string	The id of the device.
-      */
+     * Returns the id of the device as in /dev/disk/by-id
+     *
+     * @return 	string	The id of the device.
+     */
     //string getId();
     
     /**
-      * Returns the name of the device
-      * 
-      * @return	string	The name of the device
-      */
-    string getName();
+     * Returns the name of the device
+     * 
+     * @return	string	The name of the device
+     */
+    string getName() const;
     
     /**
-      * Returns true if the disk is watched
-      */
-    bool isWatched();
+     * Returns true if the disk is watched
+     */
+    bool isWatched() const;
     
     /**
-      * Returns true as long as the disk is active
-      */
-    bool isActive();
+     * Returns true as long as the disk is active
+     */
+    bool isActive() const;
     
     /**
-      * Returns the time the disk has been idle in seconds.
-      * This value is can be wrong because it depends on the next cycle
-      * to be updated.
-      */
-    unsigned int idleTime();
+     * Returns the time the disk has been idle in seconds.
+     * This value is can be wrong because it depends on the next cycle
+     * to be updated.
+     */
+    unsigned int idleTime() const;
     
     /**
-      * Returns true if the disk is present.
-      * Returns flase if the disk is nog in the system or when the disk has
-      * one or more duplicates.
-      */
-    bool isPresent();
-    
-    /**
-      * Set if the disc has to be spundown
-      * 
-      * @param	bool	sd	true or false
-      */
+     * Set if the disc has to be spundown
+     * 
+     * @param	bool	sd	true or false
+     */
     //void enableSpinDown( bool sd );
       
+    /**
+     * Returns the number of seconds this disk needs to be idle before
+     * it is spun down. Return 0 if not configured
+     *
+     * @return	int	The configured spindown time
+     */
+    unsigned int spinDownTime() const;
+
+    /**
+     * Writes the current disks stats & configuration to the passed
+     * ofstream. The stream must be already open. This is used for
+     * the status fifo
+     */
+    void showStats(ostream& out, unsigned int sgTime) const;
+
+  protected:
+
+    /**
+     * Update the internal statistics from the passed Disk
+     * This function is used to initialise a new object with the
+     * statistics of an already existing object. The configuration
+     * values are not changed
+     * 
+     * @param       Disk*   disk   A valid Disk object
+     */
+    void setStatsFrom(Disk const & disk);
+
+
   private:
     /**
      * The id of the device as found in /dev/disk/by-id/
@@ -163,37 +198,127 @@ class Disk
     bool spinDown;
     
     /**
-      * Finds the dev name for the current dev id and puts it in devName
-      * If no dev name is found devName will be empty. This means the device
-      * is not present.
-      * 
-      * When this function receives "." as dev it resets the device name.
-      * This is because readdir starts with ".".
-      * 
-      * @param       string  dev   the name of a link in /dev/disk/by-id
-      */
+     * The time a disk needs to be idle before it's spundown.
+     * Time is in seconds, 0 is unconfigured
+     */
+    unsigned int localSpinDownTime;
+
+    /**
+     * Finds the dev name for the current dev id and puts it in devName
+     * If no dev name is found devName will be empty. This means the device
+     * is not present.
+     * 
+     * When this function receives "." as dev it resets the device name.
+     * This is because readdir starts with ".".
+     * 
+     * @param       string  dev   the name of a link in /dev/disk/by-id
+     */
     void findDevName( string dev );
     
     /**
-      * Update the values
-      * This function only needs a line from diskstats and then
-      * only uses the information it needs
-      * 
-      * @param       char*   input   a char array containing a line from diskstats
-      */
+     * Update the values
+     * This function only needs a line from diskstats and then
+     * only uses the information it needs
+     * 
+     * @param       char*   input   a char array containing a line from diskstats
+     */
     void updateStats( string input );
     
     /**
-      * Spinsdown the disc with the right command.
-      */
-    void doSpinDown();
+     * Spinsdown the disc with the right command.
+     *
+     * @param       unsigned int  sgTime   the default spindown time
+     */
+    void doSpinDown(unsigned int sgTime);
     
     /**
-      * Check for duplicate disks.
-      * 
-      * @return       bool    true if the disk has a duplicate
-      */
-    bool hasDuplicates();
+     * Count occurences of this object in the passed DiskSet
+     * This method uses the name of this object to check how many objects
+     * in the passed DiskSet have the same name
+     * 
+     * @param        DiskSet* search  The DiskSet to search
+     * @return       int     Number of duplicates found
+     */
+    int countEntries(DiskSet const & search) const;
+};
+
+
+class DiskSet : public vector<Disk*>
+{
+  public:  
+    
+    /**
+     * Constructor: Create a new DiskSet
+     *
+     * @param unsigned int The default idle time
+     */
+    DiskSet(unsigned int sgTime = 7200);
+
+    /**
+     * Cleanup of the DiskSet object
+     */
+    ~DiskSet();
+
+    /**
+     * Reads all the files in /dev/disk/by-id and passes theses results
+     * to the disks.
+     */
+    void updateDevNames();
+
+    /**
+     * Reads the file /proc/diskstats and passes this line by line to
+     * every disk.
+     */
+    void updateDiskstats();
+
+    /**
+     * Spinsdown all disks.
+     */
+    void doSpinDown();
+
+    /**
+     * Sets the common spindown time
+     *
+     * @param unsigned int sgTime The new spindown time
+     */
+    void setCommonSpinDownTime(unsigned int sgTime);
+
+    /**
+     * Writes the current disks stats & configuration to the passed
+     * ofstream. The stream must be already open. This is used for
+     * the status fifo
+     *
+     * @param ostream& out The stream to write the output to
+     * @param bool     all If true, write all configured disks, even if not present
+     */
+    void showStats(ostream& Out, bool all = false) const;
+
+    /**
+     * Update the internal statistics of all disks.
+     * The Disks of the passed DiskSet are used to update the values of
+     * the Disks in this object.
+     *
+     * @param DiskSet& set The DiskSet to get the statistics from
+     */
+    void setStatsFrom(DiskSet const & set);
+
+    /**
+     * Find the passed disk in this DiskSet
+     * Uses the disk names to find the passed Disk 
+     *
+     * @param Disk& disk The disk to search
+     * @return Disk* disk The found disk, 0 if no disk was found
+     */
+    Disk* find(Disk const& disk);
+
+  private:
+
+    /**
+     * Spindown time to use for the disks if they don't have a
+     * configured spindown time
+     */
+    unsigned int commonSpinDownTime;
+
 };
 
 #endif

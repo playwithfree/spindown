@@ -34,7 +34,6 @@
 
 using std::string;
 using std::ofstream;
-using std::ifstream;
 using std::ios;
 using std::cout;
 using std::cerr;
@@ -46,6 +45,9 @@ using std::endl;
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <signal.h>
+
+sigset_t Spindown::signalSet;
 
 Spindown::Spindown( int argc, char* argv[] )
 {
@@ -62,63 +64,66 @@ Spindown::Spindown( int argc, char* argv[] )
   //when the user doesn't specify these file we look for them in the current directory
   fifoPath = relToAbs( "./spindown.fifo" );
   confPath = relToAbs( "./spindown.conf" );
-  
-  cycleTime = 60;
 
+  disks = 0;
+  cycleTime = 60;
+  
   //get command line parameters
   parseCommandline(argc, argv);
   
   //now load configuration file
   readConfig();
   
+  //detach from terminal
   daemonize();
+
+  // initialise thread management
+  pthread_mutex_init(&mutex, NULL);
+
+  // make sure we block the right signals
+  installSignalHandlers();
 }
 
 int Spindown::execute()
 {
   while( true )
   {
-    updateDevNames();
-    updateDiskstats();
+    // make sure we can access all variables
+    pthread_mutex_lock(&mutex);
+
+    disks->updateDevNames();
+    disks->updateDiskstats();
+    disks->doSpinDown();
+
+    // open variables to other threads
+    pthread_mutex_unlock(&mutex);
+
     sleep( cycleTime );
   }
   
   return 0;
 }
 
-void Spindown::updateDevNames()
+int Spindown::signalHandler()
 {
-  //dir pointer
-  DIR *dp;
-  //structure containing file data
-  struct dirent *ep;
-  
-  if ( (dp = opendir (DEVID_PATH)) != NULL)
-  {
-    while (ep = readdir (dp))
-    {
-      for( int i=0 ; i < Disk::disks.size() ; i++ )
-        Disk::disks[i]->update( CMD_BYID, ep->d_name );
-    }
-    (void) closedir (dp);
-  }
-}
+  int signalNumber;
 
-void Spindown::updateDiskstats()
-{
-  ifstream fin( STATS_PATH, ios::in );
-  char str[CHAR_BUF];
-
-  if( fin )
+  while(1)
   {
-    while( fin.getline(str,CHAR_BUF) )
-    {
-      for( int i=0 ; i < Disk::disks.size() ; i++ )
-        Disk::disks[i]->update( CMD_DISKSTATS, str );
-    }
-    fin.close();
+    // we'll block until we get a signal.
+    // because we're using sigwati we're guaranteed
+    // to get the signal
+    sigwait(&signalSet, &signalNumber);
+
+    if (signalNumber != SIGHUP)
+      continue;
+
+    pthread_mutex_lock(&mutex);
+    readConfig();
+    pthread_mutex_unlock(&mutex);
   }
-}
+  return 0;
+} 
 
 void Spindown::checkFifo()
 {
@@ -129,34 +134,31 @@ void Spindown::checkFifo()
   while( true )
   {
     fifoOut.open(fifoPath.data());
-
-    for( int i=0 ; i < Disk::disks.size() ; i++ )
-    {
-      if( Disk::disks[i]->isPresent() )
-      {
-        fifoOut << Disk::disks[i]->getName()
-                << " " << Disk::disks[i]->isWatched()
-                << " " << Disk::disks[i]->isActive()
-                << " " << Disk::disks[i]->idleTime()
-                << endl;
-      }
-    }
-
+    pthread_mutex_lock(&mutex);
+    disks->showStats(fifoOut);
+    pthread_mutex_unlock(&mutex);
     fifoOut.close();
     sleep(1);
   }
 }
 
-void Spindown::readConfig()
+void Spindown::readConfig(string* path)
 {
   dictionary* ini;
   string section;
   string input;
-  
+  DiskSet* newDiskSet;
+  int commonSpinDownTime = 7200;
+
+  if( !path)
+    path = &confPath;
+
   //try to open the configuration file
-  if( (ini=iniparser_load(confPath.data()))==NULL )
+  if( (ini=iniparser_load(path->data()))==NULL )
     exit(1);
   
+  newDiskSet = new DiskSet;
+
   //go trough the sections of the file
   for( int i=0 ; i < iniparser_getnsec(ini) ; i++ )
   {
@@ -166,27 +168,43 @@ void Spindown::readConfig()
     //general section?
     if( section=="general" )
     {
-      Disk::spinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
+      commonSpinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
       
-      if( Disk::spinDownTime <= 0 )
-        Disk::spinDownTime = 7200;
+      if( commonSpinDownTime <= 0 )
+        commonSpinDownTime = 7200;
       
       cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
     }
     //disk?
     else if( section.substr(0,4) == "disk" )
     {
-      //no need to store the object somewhere, they are automatically stored in Disk::disks
-      new Disk( iniparser_getstring (ini, string(section+":id").data(),       (char*)""),
-                iniparser_getstring (ini, string(section+":name").data(),     (char*)""),
-                iniparser_getboolean(ini, string(section+":spindown").data(), 0),
-                iniparser_getstring (ini, string(section+":command").data(),  (char*)"--stop")
-              );
+      // the parsing of the configuration is up to the Disk class
+      Disk* newDisk = Disk::create(*ini, section);
+
+      if (!newDisk)
+        continue;
+       
+      newDiskSet->push_back(newDisk);
     }
   }
-  
+
   //free the memory of the directory
   iniparser_freedict(ini);
+
+  // initialise both the DiskSet as the Disks
+  newDiskSet->setCommonSpinDownTime(commonSpinDownTime);
+
+  // if a previous configuration exists, copy the internal status
+  // to the new configuration and delete the old one
+  if (disks)
+  {
+    newDiskSet->updateDevNames();
+    disks->updateDevNames();
+    newDiskSet->setStatsFrom(*disks);
+    delete disks;
+  }
+
+  disks = newDiskSet;
 }
 
 void Spindown::daemonize()
@@ -200,7 +218,7 @@ void Spindown::daemonize()
     exit(EXIT_FAILURE);
 
   /* If we got a good PID, then
-  we can exit the parent process. */
+     we can exit the parent process. */
   if (pid > 0)
     exit(EXIT_SUCCESS);
 
@@ -222,6 +240,14 @@ void Spindown::daemonize()
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
+
+}
+
+void Spindown::installSignalHandlers()
+{
+  sigemptyset(&signalSet);
+  sigaddset(&signalSet, SIGHUP);
+  pthread_sigmask(SIG_BLOCK, &signalSet, NULL);
 }
 
 void Spindown::parseCommandline(int argc, char* argv[] )

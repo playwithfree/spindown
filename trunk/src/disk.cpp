@@ -22,6 +22,7 @@
 
 #include "disk.h"
 #include "general.h"
+#include "ininiparser3.0b/iniparser.h"
 
 #include <iostream>
 #include <string>
@@ -37,11 +38,7 @@ using std::vector;
 #include <sys/types.h>
 #include <sys/stat.h>
 
-unsigned int Disk::spinDownTime = 7200;
-
-vector<Disk*> Disk::disks;
-
-Disk::Disk( string id, string name, bool sd, string sgPars )
+Disk::Disk( string id, string name, bool sd, string sgPars, int sdTime )
 {
   //if both names are empty something is wrong
   if( id == "" && name == "" )
@@ -60,7 +57,8 @@ Disk::Disk( string id, string name, bool sd, string sgPars )
   
   devId = id;
   devName = name;
-  
+  localSpinDownTime = sdTime < 0 ? 0 : sdTime;
+
   totalBlocks = 0;
   
   sgParameters = sgPars;
@@ -69,21 +67,24 @@ Disk::Disk( string id, string name, bool sd, string sgPars )
   
   active = true;
   spinDown = sd;
-  
-  //put the disk in the array.
-  disks.push_back( this );
+}
+
+Disk* Disk::create( dictionary& ini, string const & section)
+{
+
+  string id     = iniparser_getstring (&ini, string(section+":id").data(),       (char*)"");
+  string name   = iniparser_getstring (&ini, string(section+":name").data(),     (char*)"");
+  bool sd       = iniparser_getboolean(&ini, string(section+":spindown").data(), 0);
+  string sgPars = iniparser_getstring (&ini, string(section+":command").data(),  (char*)"--stop");
+  int sgTime    = iniparser_getint (&ini, string(section+":idle-time").data(), 0);
+
+  Disk* newDisk = new Disk(id, name, sd, sgPars, sgTime);
+
+  return newDisk;
 }
 
 Disk::~Disk()
 {
-  for( vector<Disk*>::iterator i = disks.begin() ; i != disks.end() ; i++ )
-  {
-    if( *i == this )
-    {
-      disks.erase( i );
-      break;
-    }
-  }
 }
 
 void Disk::update( unsigned char command, string value )
@@ -125,19 +126,14 @@ void Disk::updateStats( string input )
   if( devNameInp == devName )
   {
     /*
-    The values from /proc/diskstats can overflow because they are 32-bit integers.
-    But because we are only looking for changes we don't have to detect it.
+      The values from /proc/diskstats can overflow because they are 32-bit integers.
+      But because we are only looking for changes we don't have to detect it.
     */
     if( newRead + newWritten != totalBlocks )
     {
       lastActive = time(NULL);
       active = true;
     }
-
-    //spindown the disk if it is idle for long enough
-    //and when it should be spundown and when it is active
-    if( idleTime()>=spinDownTime && active && spinDown && !hasDuplicates() )
-      doSpinDown();
 
     totalBlocks = newRead + newWritten;
   }
@@ -168,9 +164,23 @@ void Disk::findDevName( string dev )
   }
 }
 
-void Disk::doSpinDown()
+void Disk::doSpinDown(unsigned int sgTime)
 {
   string command;
+
+  // Entries with bad device names cannot be spun down
+  if (devName == "")
+    return;
+
+  // if no spindown time was configured, use the passed default vaule
+  if (spinDownTime())
+    sgTime = spinDownTime();
+
+  //spindown the disk if it is idle for long enough
+  //and when it should be spundown and when it is active
+  if( idleTime() < sgTime || !active || !spinDown )
+    return;
+
   //build command + execute
   command = "sg_start " + sgParameters + " /dev/" + devName;
   system( command.data() );
@@ -179,41 +189,62 @@ void Disk::doSpinDown()
   active = false;
 }
 
-bool Disk::hasDuplicates()
+int Disk::countEntries(DiskSet const & search)  const
 {
-  for( int i=0 ; i < disks.size() ; i++ )
+  int count = 0;
+
+  for( int i=0 ; i < search.size() ; i++ )
   {
-    if( disks[i]->getName() == devName && disks[i] != this  )
-      return true;
+    if( search[i]->getName() == devName  )
+      count++;
   }
 
-  return false;
+  return count;
 }
 
-string Disk::getName()
+string Disk::getName() const
 {
   return devName;
 }
 
-bool Disk::isWatched()
+bool Disk::isWatched() const
 {
   return ((devName!="")&&spinDown) ? true : false;
 }
 
-bool Disk::isActive()
+bool Disk::isActive() const
 {
   return active;
 }
 
-unsigned int Disk::idleTime()
+unsigned int Disk::idleTime() const
 {
   return (unsigned int)difftime( time(NULL), lastActive );
 }
 
-bool Disk::isPresent()
+unsigned int Disk::spinDownTime() const
 {
-  if( !hasDuplicates() && devName != "" )
-    return true;
-  else
-    return false;
+  return localSpinDownTime;
+}
+
+void Disk::setStatsFrom(Disk const & disk)
+{
+  // only copy the internal status, don't touch configuration!
+  lastActive        = disk.lastActive;
+  active            = disk.active;
+  spinDown          = disk.spinDown;
+}
+
+void Disk::showStats(ostream& out, unsigned int sgTime) const
+{
+  if (devName == "")
+    return;
+
+  out << this->getName()
+      << " " << this->isWatched()
+      << " " << this->isActive()
+      << " " << this->idleTime()
+      << " " << (this->spinDownTime() ? this->spinDownTime() : sgTime )
+      << std::endl;
+  return;
 }
