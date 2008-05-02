@@ -1,6 +1,6 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
-VERSION = 0.1.3
+VERSION = 0.2
 OBJS = diskset.o disk.o thread.o spindown.o iniparser.o dictionary.o
 CC = g++
 CFLAGS =-O1 -pthread

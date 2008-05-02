@@ -1,3 +1,11 @@
+Spindown v0.2:
+
+26-04-2008:
+  * It is now possible to set the spindown time for every individual disk (by Thomas Brunko)
+  * Now you can reload the settings by sending SIGHUP to spindownd (by Thomas Brunko)
+
+===============================================================================
+
 Spindown v0.1.3:
 
 03-04-2008:
