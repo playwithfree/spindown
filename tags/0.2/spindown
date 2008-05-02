@@ -1,0 +1,175 @@
+#!/bin/bash
+
+# Call this file like this: "DEBUG=1 ./spindown [OPTION]"
+# if you want to run in debug mode.
+
+if [ $DEBUG ]; then
+
+  SPINDOWNPATH="./spindownd"
+  LOCKFILE="./spindown.lock"
+  FIFOPATH="./spindown.fifo"
+  CONFPATH="./spindown.conf"
+
+else
+
+  SPINDOWNPATH="/sbin/spindownd"
+  LOCKFILE="/var/lock/spindown.lock"
+  FIFOPATH="/var/run/spindown.fifo"
+  CONFPATH="/etc/spindown.conf"
+
+fi
+
+# echo's the string and then the amount of spaces needed to fill it till length
+# $1 the string
+# $2 the desired length
+spaces() {
+
+  declare -i i
+  declare -i diff
+  diff=$2-${#1}
+  
+  #at least one space between values
+  if [ $diff -lt 1 ]; then
+    diff=1
+  fi
+
+  #print the string
+  echo -n $1
+
+  #print the remaining spaces
+  i=0
+  while [ $i -lt $diff ]; do
+    echo -n " "
+    i=$i+1
+  done
+
+}
+
+#prints table with status about the disks
+status() {
+  
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -ne 1 ]; then
+    
+    echo "Daemon not running."
+    exit 1
+    
+  fi
+  
+  #print the header of the table
+  spaces "name" 15
+  spaces "watched" 15
+  spaces "active" 15
+  spaces "idle-time" 15
+  spaces "spindown-time" 15
+  echo ""
+  
+  #build the rows with disks
+  declare -i i
+  i=0
+  for line in `cat $FIFOPATH`; do
+    
+    remainder=`expr $i % 5`
+    if [ $remainder -eq 0 -a $i -ne 0 ]; then
+      echo ""
+      spaces $line 15
+    else
+      spaces $line 15
+    fi
+    
+    i=$i+1
+  done
+  
+  echo ""
+}
+
+start() {
+
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -lt 1 ]; then
+    
+    if ${SPINDOWNPATH} -f ${FIFOPATH} -c ${CONFPATH}; then
+      
+      echo "Starting spindownd daemon: ...done."
+      touch ${LOCKFILE}
+    
+    else
+      
+      exit 1
+      
+    fi
+    
+  else
+  
+    echo "Daemon already running."
+    exit 1
+    
+  fi
+  
+}
+
+stop() {
+
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -gt 0 ]; then
+
+    echo -n "Stopping spindownd daemon: "
+    pkill spindownd
+    rm -f ${LOCKFILE}
+    echo "...stopped."
+      
+  else
+  
+    echo "Daemon not running."
+    exit 1
+    
+  fi
+  
+}
+
+reload() {
+
+  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
+  
+  if [ $CHECK -gt 0 ]; then
+
+    echo -n "Sending SIGHUP to spindownd daemon: "
+    pkill -HUP spindownd
+    echo "...ok."
+
+  else
+  
+    echo "Daemon not running."
+    exit 1
+    
+  fi
+  
+}
+
+case "$1" in
+  "start")
+        start
+        ;;
+  "stop")
+        stop
+        ;;
+  "status")
+        #by outputting it like this it all appears on the screen in one time
+        echo "`status`"
+        ;;
+  "restart"|"condrestart")
+        stop
+        start
+        ;;
+  "reload")
+        reload
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+
+exit 0
