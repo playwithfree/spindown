@@ -17,13 +17,13 @@ The configuration file consists of two different sections: the general section a
 
 ===The General section===
 
-The General section has only two parameters: cycle-time and idle-time. The cycle-time parameter defines the time in seconds between checks (looking up the device name for the disk id and updating the amount of block read and written), a good value is 60. The idle-time parameter defines how long a disk should be idle before it is spundown. Don't use a to small value for this setting, because spinning the disc up and down to much isn't good for it's health. A good value for idle-time is 3600.
+The General section has only two parameters: cycle-time and idle-time. The cycle-time parameter defines the time in seconds between checks (looking up the device name for the disk id and updating the amount of block read and written), a good value is 60. The idle-time parameter defines how long a disk should be idle before it is spundown. Don't use a to small value for this setting, because spinning the disc up and down to much isn't good for it's health. A good value for idle-time is 3600. As of version 0.2 of spindown it is also possible to set this time per disk.
 
 {{{
 [General]
 cycle-time  = 60    # Number of seconds between two cycles
 idle-time   = 3600  # The time in seconds a disk has to be idle before it is spundown.
-# Do not use a value that is to small (less than 3600)
+                    # Do not use a value that is to small (less than 3600)
 }}}
 
 ===The Disk sections===
@@ -67,6 +67,10 @@ $ sg_start --stop /dev/sda
 
 Just replace sda with the name of your disk and make sure that there is no activity on this disk (by unmounting it or something like that). You should hear the disk spinning down when the command worked. If this parameter is not defined "--stop" is used.
 
+====Idle-time parameter====
+
+As of version 0.2 of spindown it is also possible to set the idle-time per disk. This time is also given in seconds.
+
 ==Example of configuration file==
 
 So your disk sections may look something like this:
@@ -84,6 +88,7 @@ spindown = 0
 id = usb-Sony_Storage_Media_1A06101710143-0:0
 spindown = 1
 command = --stop --pc=2
+idle-time = 900
 
 [Disk 2]
 name = sda
