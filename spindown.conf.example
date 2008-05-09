@@ -24,6 +24,10 @@ idle-time   = 3600  # The time in seconds a disk has to be idle before it is spu
 #       The parameter to use to spindown the disk using sg_start. The default is "--stop".
 #       The device name will be automatically added behind this value.
 #
+#   - idle-time:
+#      The time in seconds this disk has to be idle before it is spundown. This overrides
+#      the idle-time configuration in the General section.
+#
 # Only name or id are needed, but not both.
 
 # Examples:

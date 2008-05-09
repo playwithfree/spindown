@@ -21,6 +21,7 @@
  */
 
 #include "disk.h"
+#include "diskset.h"
 #include "general.h"
 
 #include <iostream>

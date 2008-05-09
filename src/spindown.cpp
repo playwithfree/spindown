@@ -135,6 +135,7 @@ void Spindown::checkFifo()
   {
     fifoOut.open(fifoPath.data());
     pthread_mutex_lock(&mutex);
+    disks->updateDiskstats();
     disks->showStats(fifoOut);
     pthread_mutex_unlock(&mutex);
     fifoOut.close();
