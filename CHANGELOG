@@ -1,6 +1,10 @@
 Spindown v0.2.1:
 
-09-0-2008:
+14-05-2008:
+  * Wrote basic definitions for the Log class.
+      This class will make it possible for spindown to log messages using syslog.
+
+09-05-2008:
   * Update example configuration file.
   * Now DiskSet has its own header file.
   * Everytime you ask the status using the init script the status gets updated.
