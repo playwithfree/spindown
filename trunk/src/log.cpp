@@ -43,13 +43,13 @@ Log::Log()
     opend = false;
 }
 
-void Log::open( string ident, int option, int facility)
+void Log::open( char* ident, int option, int facility)
 {
-    openlog( ident.data(), option, facility )
+    openlog( ident, option, facility );
     opend = true;
 }
 
-void Log::logMessage(int facility_priority, string message)
+void Log::message(int facility_priority, string message)
 {
     if( opend )
         syslog( facility_priority, message.data() );

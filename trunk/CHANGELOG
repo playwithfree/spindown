@@ -1,5 +1,9 @@
 Spindown v0.2.1:
 
+18-05-2008:
+  * Implemented Log class
+  * Send message when starting the program or spinning down a disk.
+
 14-05-2008:
   * Wrote basic definitions for the Log class.
       This class will make it possible for spindown to log messages using syslog.

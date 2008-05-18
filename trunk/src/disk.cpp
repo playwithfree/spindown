@@ -22,6 +22,7 @@
 
 #include "disk.h"
 #include "general.h"
+#include "log.h"
 #include "ininiparser3.0b/iniparser.h"
 
 #include <iostream>
@@ -183,6 +184,14 @@ void Disk::doSpinDown(unsigned int sgTime)
 
   //build command + execute
   command = "sg_start " + sgParameters + " /dev/" + devName;
+  
+  string message;
+  message = "Spinning down disk: " + devName;
+  
+  if( devId != "" )
+    message+= ", with id: " + devId;
+  
+  Log::get()->message( LOG_INFO, message );
   system( command.data() );
 
   //set disk as inactive
