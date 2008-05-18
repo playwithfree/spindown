@@ -29,6 +29,8 @@
 
 #include <string>
 
+#include <syslog.h>
+
 using std::string;
 
 class Log
@@ -38,9 +40,9 @@ class Log
         
         Log();
         
-        void open(string, int, int);
+        void open(char*, int, int);
         
-        void logMessage(int, string)
+        void message(int, string);
         
         void close();
 

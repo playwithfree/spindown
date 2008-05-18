@@ -1,7 +1,7 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
 VERSION = 0.2.1
-OBJS = diskset.o disk.o thread.o spindown.o iniparser.o dictionary.o
+OBJS = diskset.o disk.o thread.o spindown.o iniparser.o dictionary.o log.o
 CC = g++
 CFLAGS =-O1 -pthread
 SRC = src/
@@ -63,3 +63,6 @@ dictionary.o: $(INPARSER)dictionary.c
 
 thread.o: $(SRC)thread.cpp
 	g++ $(CFLAGS) -c $(SRC)thread.cpp
+
+log.o: $(SRC)log.cpp
+	g++ $(CFLAGS) -c $(SRC)log.cpp

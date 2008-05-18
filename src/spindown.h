@@ -54,6 +54,8 @@ class Spindown : public Thread
      */
     Spindown(int, char* []);
     
+    ~Spindown();
+    
     /**
      * This function will run as a thread.
      * It does the general loop.

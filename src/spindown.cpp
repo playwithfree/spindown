@@ -23,6 +23,7 @@
 #include "spindown.h"
 #include "general.h"
 #include "disk.h"
+#include "log.h"
 
 #include "ininiparser3.0b/iniparser.h"
 #include "ininiparser3.0b/dictionary.h"
@@ -74,6 +75,10 @@ Spindown::Spindown( int argc, char* argv[] )
   //now load configuration file
   readConfig();
   
+  //initialize logging
+  Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
+  Log::get()->message( LOG_INFO, "spindown started" );
+  
   //detach from terminal
   daemonize();
 
@@ -82,6 +87,11 @@ Spindown::Spindown( int argc, char* argv[] )
 
   // make sure we block the right signals
   installSignalHandlers();
+}
+
+Spindown::~Spindown()
+{
+    Log::get()->message( LOG_INFO, "spindown stopped" );
 }
 
 int Spindown::execute()
