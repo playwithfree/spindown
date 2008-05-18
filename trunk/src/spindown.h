@@ -67,7 +67,7 @@ class Spindown : public Thread
      * It processes all signals
      */
     int signalHandler();
-
+    
     /**
      * A loop that checks the fifo and then writes to it when it is opend
      */
