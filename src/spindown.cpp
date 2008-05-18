@@ -114,6 +114,14 @@ int Spindown::execute()
   return 0;
 }
 
+void Spindown::installSignalHandlers()
+{
+    sigemptyset(&signalSet);
+    sigaddset(&signalSet, SIGHUP);
+    sigaddset(&signalSet, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &signalSet, NULL);
+}
+
 int Spindown::signalHandler()
 {
   int signalNumber;
@@ -125,13 +133,24 @@ int Spindown::signalHandler()
     // to get the signal
     sigwait(&signalSet, &signalNumber);
 
-    if (signalNumber != SIGHUP)
-      continue;
-
-    pthread_mutex_lock(&mutex);
-    readConfig();
-    pthread_mutex_unlock(&mutex);
+    switch( signalNumber )
+    {
+        case SIGHUP:
+            pthread_mutex_lock(&mutex);
+            readConfig();
+            pthread_mutex_unlock(&mutex);
+            break;
+            
+        case SIGTERM:
+            Log::get()->message( LOG_INFO, "spindown stopped" );
+            exit(0);
+            break;
+            
+        default:
+            break;
+    }
   }
+  
   return 0;
 } 
 
@@ -252,13 +271,6 @@ void Spindown::daemonize()
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 
-}
-
-void Spindown::installSignalHandlers()
-{
-  sigemptyset(&signalSet);
-  sigaddset(&signalSet, SIGHUP);
-  pthread_sigmask(SIG_BLOCK, &signalSet, NULL);
 }
 
 void Spindown::parseCommandline(int argc, char* argv[] )
