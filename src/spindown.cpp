@@ -75,8 +75,7 @@ Spindown::Spindown( int argc, char* argv[] )
   //now load configuration file
   readConfig();
   
-  //initialize logging
-  Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
+  //notify about being started
   Log::get()->message( LOG_INFO, "spindown started" );
   
   //detach from terminal
@@ -204,6 +203,8 @@ void Spindown::readConfig(string* path)
         commonSpinDownTime = 7200;
       
       cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
+      
+      logMessages = iniparser_getboolean(ini, string(section+":syslog").data(), 0);
     }
     //disk?
     else if( section.substr(0,4) == "disk" )
@@ -221,6 +222,12 @@ void Spindown::readConfig(string* path)
   //free the memory of the directory
   iniparser_freedict(ini);
 
+  //initialize logging
+  if( logMessages )
+      Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
+  else
+      Log::get()->close();
+  
   // initialise both the DiskSet as the Disks
   newDiskSet->setCommonSpinDownTime(commonSpinDownTime);
 

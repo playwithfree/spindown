@@ -1,7 +1,12 @@
 Spindown v0.2.1:
 
+19-05-2008:
+  * Logging of messages can now be turned off or on in the configuration file.
+  * Logging happens when disk is spundown, becomes back active and when the program
+        is started or stopped.
+  * Updated config file.
+
 18-05-2008:
-  * Implemented Log class
   * Message are logged when starting and stopping spindown and when spinning down a disk.
 
 14-05-2008:

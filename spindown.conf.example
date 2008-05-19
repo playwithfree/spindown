@@ -1,8 +1,13 @@
 [General]
-cycle-time  = 60    # Number of seconds between two cycles
-idle-time   = 3600  # The time in seconds a disk has to be idle before it is spundown.
+cycle-time = 60     # Number of seconds between cycles.
+
+idle-time = 3600    # The time in seconds a disk has to be idle before it is spundown.
                     # Do not use a value that is to small (less than 3600) unless you
                     # know what you are doing.
+
+syslog = 0          # Turn this on if you want spindown to log messages using syslog.
+                    # You will not want to turn this on if you are trying to spindown
+                    # the disk with the root filesystem on.
 
 # Add as much disks as you want.
 #
