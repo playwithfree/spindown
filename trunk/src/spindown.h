@@ -102,6 +102,11 @@ class Spindown : public Thread
     string runPath;
     
     /**
+     * Put on true if you whant spindown to log with syslog
+     */
+    bool logMessages;
+    
+    /**
      * The disks to administer
      */
     DiskSet* disks;

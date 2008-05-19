@@ -132,8 +132,22 @@ void Disk::updateStats( string input )
     */
     if( newRead + newWritten != totalBlocks )
     {
-      lastActive = time(NULL);
-      active = true;
+        //if the disk was not active log a message
+        if( !active )
+        {
+            string message;
+            message = "Disk \"" + devName;
+        
+            if( devId != "" )
+                message+= "\", with id \"" + devId;
+        
+            message+= "\" is active";
+        
+            Log::get()->message( LOG_INFO, message );
+        }
+        
+        lastActive = time(NULL);
+        active = true;
     }
 
     totalBlocks = newRead + newWritten;
@@ -186,10 +200,10 @@ void Disk::doSpinDown(unsigned int sgTime)
   command = "sg_start " + sgParameters + " /dev/" + devName;
   
   string message;
-  message = "Spinning down disk: " + devName;
+  message = "Spinning down disk \"" + devName + "\"";
   
   if( devId != "" )
-    message+= ", with id: " + devId;
+    message+= ", with id \"" + devId + "\"";
   
   Log::get()->message( LOG_INFO, message );
   system( command.data() );

@@ -45,7 +45,9 @@ Log::Log()
 
 void Log::open( char* ident, int option, int facility)
 {
-    openlog( ident, option, facility );
+    if( !opend )
+        openlog( ident, option, facility );
+    
     opend = true;
 }
 
@@ -57,7 +59,9 @@ void Log::message(int facility_priority, string message)
 
 void Log::close()
 {
-    closelog();
+    if( opend )
+        closelog();
+    
     opend = false;
 }
 
