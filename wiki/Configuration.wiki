@@ -17,13 +17,33 @@ The configuration file consists of two different sections: the general section a
 
 ===The General section===
 
-The General section has only two parameters: cycle-time and idle-time. The cycle-time parameter defines the time in seconds between checks (looking up the device name for the disk id and updating the amount of block read and written), a good value is 60. The idle-time parameter defines how long a disk should be idle before it is spundown. Don't use a to small value for this setting, because spinning the disc up and down to much isn't good for it's health. A good value for idle-time is 3600. As of version 0.2 of spindown it is also possible to set this time per disk.
+The General section has only three parameters: cycle-time, idle-time and syslog.
+
+====Cycle-time parameter====
+
+The cycle-time parameter defines the time in seconds between checks (looking up the device name for the disk id and updating the amount of block read and written), a good value is 60.
+
+====Idle-time parameter====
+
+The idle-time parameter defines how long a disk should be idle before it is spundown. Don't use a to small value for this setting, because spinning the disc up and down to much isn't good for it's health. A good value for idle-time is 3600. As of version 0.2 of spindown it is also possible to set this time per disk.
+
+=====Syslog parameter====
+
+The syslog parameter turns logging of informational messages trough syslog on or off. Depending on you Linux installation these messages will probably be added to "/var/log/daemon.log". Logging is not recommended when you are trying to spindown the disk with the root filesystem on, because writting to the log will spin the disk back up. This parameter is supported since version 0.2.1.
+
+=====Example of General section====
 
 {{{
 [General]
-cycle-time  = 60    # Number of seconds between two cycles
-idle-time   = 3600  # The time in seconds a disk has to be idle before it is spundown.
-                    # Do not use a value that is to small (less than 3600)
+cycle-time = 60     # Number of seconds between cycles.
+
+idle-time = 3600    # The time in seconds a disk has to be idle before it is spundown.
+                    # Do not use a value that is to small (less than 3600) unless you
+                    # know what you are doing.
+
+syslog = 0          # Turn this on if you want spindown to log messages using syslog.
+                    # You will not want to turn this on if you are trying to spindown
+                    # the disk with the root filesystem on.
 }}}
 
 ===The Disk sections===
@@ -71,7 +91,7 @@ Just replace sda with the name of your disk and make sure that there is no activ
 
 As of version 0.2 of spindown it is also possible to set the idle-time per disk. This time is also given in seconds.
 
-==Example of configuration file==
+====Example of disk section====
 
 So your disk sections may look something like this:
 
