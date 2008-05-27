@@ -11,9 +11,9 @@ If everything goes as planned there shouldn't be any errors and the deamon shoul
 
 {{{
 $ /etc/init.d/spindown status
-name           watched        active         idle-time
-sda            0              1              4
-sdb            1              0              5674
+name           watched        active         idle-time      spindown-time
+sda            0              1              4              3600
+sdb            1              0              22297          3600
 }}}
 
 You can also start the daemon yourself. If you would like to do this, please read the build in help function.
