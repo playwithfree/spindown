@@ -86,10 +86,15 @@ Spindown::Spindown( int argc, char* argv[] )
 
   // make sure we block the right signals
   installSignalHandlers();
+  
+  //create the fifo
+  mkfifo( fifoPath.data(), 0744 );
 }
 
 Spindown::~Spindown()
 {
+    remove( fifoPath.data() );
+    
     Log::get()->message( LOG_INFO, "spindown stopped" );
 }
 
@@ -157,8 +162,6 @@ void Spindown::checkFifo()
 {
   ofstream fifoOut;
 
-  mkfifo( fifoPath.data(), 0744 );
-  
   while( true )
   {
     fifoOut.open(fifoPath.data());

@@ -3,7 +3,7 @@ To make an installation type:
   # make install
 
 Before you can run it you'll need to copy the spindown.conf.example file to
-/etc/spindown.conf and adept it to your needs. You can run the deamon like this:
+/etc/spindown.conf and adapt it to your needs. You can run the deamon like this:
   # /etc/init.d/spindown start
 
 You can also get the status as following:
