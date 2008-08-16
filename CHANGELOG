@@ -1,5 +1,8 @@
 Spindown v0.2.2:
 
+25-06-2008:
+  * Added Gentoo init scripts (by Robin Neatherway)
+
 19-06-2008:
   * Remove the fifo when shutting down the program.
 
