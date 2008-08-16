@@ -1,0 +1,5 @@
+SPINDOWNPATH="/usr/local/bin/spindownd"
+LOCKFILE="/var/lock/spindown.lock"
+FIFOPATH="/var/run/spindown.fifo"
+CONFPATH="/etc/spindown.conf"
+
