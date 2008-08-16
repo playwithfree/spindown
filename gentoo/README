@@ -1,0 +1,7 @@
+For Gentoo you should do the following:
+
+Copy the spindownd executable to /usr/local/bin,
+    rc.spindown to /etc/conf.d/spindown and
+    init.spindown to /etc/init.d/spindown
+
+Thanks to Robin Neatherway.
