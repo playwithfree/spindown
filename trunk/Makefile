@@ -1,6 +1,6 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
-VERSION = 0.2.1
+VERSION = 0.2.2
 OBJS = diskset.o disk.o thread.o spindown.o iniparser.o dictionary.o log.o
 CC = g++
 CFLAGS =-O1 -pthread
@@ -8,6 +8,8 @@ SRC = src/
 INPARSER = $(SRC)ininiparser3.0b/
 
 all: $(OBJS)
+	@echo "THE CONFIGURATION FILE HAS CHANGED SINCE V0.2.1!!!!"
+	@echo "Please see the changelog and the example configuration file for more information."
 	g++ $(CFLAGS) -o spindownd $(SRC)main.cpp $(OBJS)
 
 clean:
@@ -17,7 +19,7 @@ install: all
 	install -D -m 755 spindownd $(sbindir)/spindownd
 #install --backup -D -m 644 spindown.conf $(etcdir)/spindown.conf
 	install -D -m 755 spindown $(etcdir)/init.d/spindown
-	
+
 #make the links in rc.d
 	mkdir -p $(etcdir)/rc0.d
 	mkdir -p $(etcdir)/rc1.d
@@ -48,16 +50,16 @@ dist:
 
 diskset.o: $(SRC)diskset.cpp
 	g++ $(CFLAGS) -c $(SRC)diskset.cpp
-	
+
 disk.o: $(SRC)disk.cpp
 	g++ $(CFLAGS) -c $(SRC)disk.cpp
-	
+
 spindown.o: $(SRC)spindown.cpp
 	g++ $(CFLAGS) -c $(SRC)spindown.cpp
-	
+
 iniparser.o: $(INPARSER)iniparser.c
 	g++ $(CFLAGS) -c $(INPARSER)iniparser.c
-	
+
 dictionary.o: $(INPARSER)dictionary.c
 	g++ $(CFLAGS) -c $(INPARSER)dictionary.c
 

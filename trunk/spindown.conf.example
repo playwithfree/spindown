@@ -26,8 +26,9 @@ syslog = 0          # Turn this on if you want spindown to log messages using sy
 #       or put it on 0 of you want spindown to leave it untouched. The default is 0.
 #
 #   - command:
-#       The parameter to use to spindown the disk using sg_start. The default is "--stop".
-#       The device name will be automatically added behind this value.
+#       The command to execute when the disk goes idle. The path to the device will be
+#       added at the end of this string.
+#       Default is: "sg_start --stop"
 #
 #   - idle-time:
 #      The time in seconds this disk has to be idle before it is spundown. This overrides
@@ -43,4 +44,4 @@ syslog = 0          # Turn this on if you want spindown to log messages using sy
 # [Disk 1]
 # name = sda
 # spindown = 1
-# command = --pc=2
+# command = hdparm -y
