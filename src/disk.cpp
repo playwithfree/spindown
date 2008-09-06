@@ -6,17 +6,17 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
+ *
  * http://www.gnu.org/licenses/gpl.html
- * 
+ *
  * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
  */
 
@@ -39,7 +39,21 @@ using std::vector;
 #include <sys/types.h>
 #include <sys/stat.h>
 
-Disk::Disk( string id, string name, bool sd, string sgPars, int sdTime )
+Disk* Disk::create( dictionary& ini, string const & section)
+{
+
+    string id      = iniparser_getstring (&ini, string(section+":id").data(),       (char*)"");
+    string name    = iniparser_getstring (&ini, string(section+":name").data(),     (char*)"");
+    bool sd        = iniparser_getboolean(&ini, string(section+":spindown").data(), 0);
+    string command = iniparser_getstring (&ini, string(section+":command").data(),  (char*)"sg_start --stop");
+    int sgTime     = iniparser_getint (&ini, string(section+":idle-time").data(), 0);
+
+    Disk* newDisk = new Disk(id, name, sd, command, sgTime);
+
+    return newDisk;
+}
+
+Disk::Disk( string id, string name, bool sd, string cmd, int sdTime )
 {
   //if both names are empty something is wrong
   if( id == "" && name == "" )
@@ -47,7 +61,7 @@ Disk::Disk( string id, string name, bool sd, string sgPars, int sdTime )
     std::cerr << "Error: there is a disk with no name or id in your configurationfile!" << std::endl;
     exit( 1 );
   }
-  
+
   //one has to be empty
   if( id != "" && name != "" )
   {
@@ -55,33 +69,19 @@ Disk::Disk( string id, string name, bool sd, string sgPars, int sdTime )
               << "(Hint: id: " << id << " name: " << name << ")" << std::endl;
     exit( 1 );
   }
-  
+
   devId = id;
   devName = name;
   localSpinDownTime = sdTime < 0 ? 0 : sdTime;
 
   totalBlocks = 0;
-  
-  sgParameters = sgPars;
-  
+
+  command = cmd;
+
   lastActive = time(NULL);
-  
+
   active = true;
   spinDown = sd;
-}
-
-Disk* Disk::create( dictionary& ini, string const & section)
-{
-
-  string id     = iniparser_getstring (&ini, string(section+":id").data(),       (char*)"");
-  string name   = iniparser_getstring (&ini, string(section+":name").data(),     (char*)"");
-  bool sd       = iniparser_getboolean(&ini, string(section+":spindown").data(), 0);
-  string sgPars = iniparser_getstring (&ini, string(section+":command").data(),  (char*)"--stop");
-  int sgTime    = iniparser_getint (&ini, string(section+":idle-time").data(), 0);
-
-  Disk* newDisk = new Disk(id, name, sd, sgPars, sgTime);
-
-  return newDisk;
 }
 
 Disk::~Disk()
@@ -95,7 +95,7 @@ void Disk::update( unsigned char command, string value )
     case CMD_DISKSTATS:
       updateStats( value );
       break;
-    
+
     case CMD_BYID:
       findDevName( value );
       break;
@@ -136,16 +136,11 @@ void Disk::updateStats( string input )
         if( !active )
         {
             string message;
-            message = "Disk \"" + devName;
-        
-            if( devId != "" )
-                message+= "\", with id \"" + devId;
-        
-            message+= "\" is active";
-        
+            message = "Disk \"" + devName + "\" is active";
+
             Log::get()->message( LOG_INFO, message );
         }
-        
+
         lastActive = time(NULL);
         active = true;
     }
@@ -167,7 +162,7 @@ void Disk::findDevName( string dev )
   {
     string buffer;
     buffer.resize( CHAR_BUF );
-    
+
     //the path to the device
     dev = DEVID_PATH + dev;
     //read target of the link
@@ -181,7 +176,7 @@ void Disk::findDevName( string dev )
 
 void Disk::doSpinDown(unsigned int sgTime)
 {
-  string command;
+  string cmd;
 
   // Entries with bad device names cannot be spun down
   if (devName == "")
@@ -196,17 +191,16 @@ void Disk::doSpinDown(unsigned int sgTime)
   if( idleTime() < sgTime || !active || !spinDown )
     return;
 
-  //build command + execute
-  command = "sg_start " + sgParameters + " /dev/" + devName;
-  
+  //synchronize writes
+  sync();
+
   string message;
   message = "Spinning down disk \"" + devName + "\"";
-  
-  if( devId != "" )
-    message+= ", with id \"" + devId + "\"";
-  
+
+  cmd = command + " /dev/" + devName;
+
   Log::get()->message( LOG_INFO, message );
-  system( command.data() );
+  system( cmd.data() );
 
   //set disk as inactive
   active = false;
