@@ -1,5 +1,9 @@
 Spindown v0.2.2:
 
+06-09-2008:
+  * The command configuration options now expects the whole command to execute and not just
+    only the parameters. It still defaults to "sg_start --stop ".
+
 25-06-2008:
   * Added Gentoo init scripts (by Robin Neatherway)
 
