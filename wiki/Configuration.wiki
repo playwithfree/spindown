@@ -115,12 +115,12 @@ spindown = 0
 [Disk 1]
 id = usb-Sony_Storage_Media_1A06101710143-0:0
 spindown = 1
-command = --stop --pc=2
+command = sg_start --stop --pc=2
 idle-time = 900
 
 [Disk 2]
 name = sda
-spindown = 0
+spindown = 1
 }}}
 
 Disks that are not specified will not be spun down.
