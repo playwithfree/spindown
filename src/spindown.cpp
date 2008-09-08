@@ -55,29 +55,23 @@ Spindown::Spindown( int argc, char* argv[] )
   char buf[CHAR_BUF];
   //this function has to be called before daemonize because it changes the path
   runPath = getcwd( buf, CHAR_BUF );
-  
-  if( system("sg_start -V 2> /dev/null") != 0 )
-  {
-    cerr << "Error: The command sg_start is needed, but not found. Please install it." << endl;
-    exit( 1 );
-  }
-  
+
   //when the user doesn't specify these file we look for them in the current directory
   fifoPath = relToAbs( "./spindown.fifo" );
   confPath = relToAbs( "./spindown.conf" );
 
   disks = 0;
   cycleTime = 60;
-  
+
   //get command line parameters
   parseCommandline(argc, argv);
-  
+
   //now load configuration file
   readConfig();
-  
+
   //notify about being started
   Log::get()->message( LOG_INFO, "spindown started" );
-  
+
   //detach from terminal
   daemonize();
 
@@ -86,7 +80,7 @@ Spindown::Spindown( int argc, char* argv[] )
 
   // make sure we block the right signals
   installSignalHandlers();
-  
+
   //create the fifo
   mkfifo( fifoPath.data(), 0744 );
 }
@@ -94,7 +88,7 @@ Spindown::Spindown( int argc, char* argv[] )
 Spindown::~Spindown()
 {
     remove( fifoPath.data() );
-    
+
     Log::get()->message( LOG_INFO, "spindown stopped" );
 }
 
@@ -114,7 +108,7 @@ int Spindown::execute()
 
     sleep( cycleTime );
   }
-  
+
   return 0;
 }
 
@@ -144,19 +138,19 @@ int Spindown::signalHandler()
             readConfig();
             pthread_mutex_unlock(&mutex);
             break;
-            
+
         case SIGTERM:
             Log::get()->message( LOG_INFO, "spindown stopped" );
             exit(0);
             break;
-            
+
         default:
             break;
     }
   }
-  
+
   return 0;
-} 
+}
 
 void Spindown::checkFifo()
 {
@@ -188,7 +182,7 @@ void Spindown::readConfig(string* path)
   //try to open the configuration file
   if( (ini=iniparser_load(path->data()))==NULL )
     exit(1);
-  
+
   newDiskSet = new DiskSet;
 
   //go trough the sections of the file
@@ -196,17 +190,17 @@ void Spindown::readConfig(string* path)
   {
     //read the name of the section
     section = iniparser_getsecname(ini, i);
-    
+
     //general section?
     if( section=="general" )
     {
       commonSpinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
-      
+
       if( commonSpinDownTime <= 0 )
         commonSpinDownTime = 7200;
-      
+
       cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
-      
+
       logMessages = iniparser_getboolean(ini, string(section+":syslog").data(), 0);
     }
     //disk?
@@ -217,7 +211,7 @@ void Spindown::readConfig(string* path)
 
       if (!newDisk)
         continue;
-       
+
       newDiskSet->push_back(newDisk);
     }
   }
@@ -230,7 +224,7 @@ void Spindown::readConfig(string* path)
       Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
   else
       Log::get()->close();
-  
+
   // initialise both the DiskSet as the Disks
   newDiskSet->setCommonSpinDownTime(commonSpinDownTime);
 
@@ -266,16 +260,16 @@ void Spindown::daemonize()
   umask(0);
 
   /* Open any logs here */
-  
+
   /* Create a new SID for the child process */
   sid = setsid();
   if (sid < 0)
     exit(EXIT_FAILURE);
-  
+
   /* Change the current working directory */
   if ((chdir("/")) < 0)
     exit(EXIT_FAILURE);
-  
+
   /* Close out the standard file descriptors */
   close(STDIN_FILENO);
   close(STDOUT_FILENO);
@@ -290,7 +284,7 @@ void Spindown::parseCommandline(int argc, char* argv[] )
   for( int i=0 ; i<argc ; i++ )
   {
     arg = argv[i];
-    
+
     //print version information
     //version number is set in general.h
     if( arg=="-V" || arg=="--version" )
@@ -304,7 +298,7 @@ void Spindown::parseCommandline(int argc, char* argv[] )
 
       exit(EXIT_SUCCESS);
     }
-    
+
     //show the help file text
     else if( arg=="-h" || arg=="--help" )
     {
@@ -321,14 +315,14 @@ void Spindown::parseCommandline(int argc, char* argv[] )
            << "For more information and contact visit <http://projects.dimis-site.be>." <<endl;
       exit(EXIT_SUCCESS);
     }
-    
+
     //don't read to far
     else if( i+1 < argc )
     {
       //set fifo path
       if( arg=="-f"||arg=="--fifo-path" )
         fifoPath = relToAbs(argv[++i]);
-        
+
       //set config file path
       else if( arg=="-c" || arg=="--config-file" )
         confPath = relToAbs(argv[++i]);
@@ -344,10 +338,10 @@ string Spindown::relToAbs( string path )
     path.erase(0,1);
     path.insert( 0, runPath );
   }
-  
+
   //everything else that doesn't start with "/" it's relative
   else if( path.substr(0,1) != "/" )
     path.insert( 0, runPath+"/" );
-  
+
   return path;
 }

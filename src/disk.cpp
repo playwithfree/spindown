@@ -28,9 +28,11 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <sstream>
 
 using std::string;
 using std::vector;
+using std::ostringstream;
 
 #include <time.h>
 #include <dirent.h>
@@ -176,7 +178,7 @@ void Disk::findDevName( string dev )
 
 void Disk::doSpinDown(unsigned int sgTime)
 {
-  string cmd;
+  string cmd = command + " /dev/" + devName;
 
   // Entries with bad device names cannot be spun down
   if (devName == "")
@@ -194,13 +196,15 @@ void Disk::doSpinDown(unsigned int sgTime)
   //synchronize writes
   sync();
 
-  string message;
-  message = "Spinning down disk \"" + devName + "\"";
-
-  cmd = command + " /dev/" + devName;
-
-  Log::get()->message( LOG_INFO, message );
-  system( cmd.data() );
+  if(int ret=system(cmd.data()) == 0) {
+    string message = "Spinning down disk \"" + devName + "\"";
+    Log::get()->message( LOG_INFO, message );
+  }
+  else {
+      ostringstream oss;
+      oss << "Spindown failed: \"" << cmd << "\" returned " << ret;
+      Log::get()->message( LOG_INFO, oss.str() );
+  }
 
   //set disk as inactive
   active = false;
