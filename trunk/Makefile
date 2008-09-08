@@ -8,11 +8,11 @@ SRC = src/
 INPARSER = $(SRC)ininiparser3.0b/
 
 all: $(OBJS)
+	g++ $(CFLAGS) -o spindownd $(SRC)main.cpp $(OBJS)
 	@echo "---"
 	@echo "THE CONFIGURATION FILE HAS CHANGED SINCE V0.2.1!!!!"
 	@echo "Please see the changelog and the example configuration file for more information."
 	@echo "---"
-	g++ $(CFLAGS) -o spindownd $(SRC)main.cpp $(OBJS)
 
 clean:
 	rm -f $(OBJS) spindownd
