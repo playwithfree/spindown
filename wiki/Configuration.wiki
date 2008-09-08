@@ -79,13 +79,21 @@ The spindown parameter is boolean, it can either be 1 or 0. When it is 1 this me
 
 ====Command parameter====
 
-The command parameter tells the spindown script which parameters to use to spindown the disc with sg3_start. You should try to find these out by your self. For me it mostly is enough to use "--stop" or "--stop --pc=2". You can try these parameters by running sg_start yourself.
+The command parameter tells the spindown script which command to use to spindown the disk. You should try to find these out by your self. For me it mostly is enough to use "sg_start --stop" or "sg_start --stop --pc=2". You can try these parameters by running sg_start yourself.
 
 {{{
 $ sg_start --stop /dev/sda
 }}}
 
-Just replace sda with the name of your disk and make sure that there is no activity on this disk (by unmounting it or something like that). You should hear the disk spinning down when the command worked. If this parameter is not defined "--stop" is used.
+Some users have can't spindown ATA drives with sg_start. If this is the case for you, you should try hdparm.
+
+{{{
+$ hdparm -y /dev/hda
+}}}
+
+Just replace sda/hda with the name of your disk and make sure that there is no activity on this disk (by unmounting it or something like that). You should hear the disk spinning down when the command worked. If this parameter is not defined "sg_start --stop" is used.
+
+If you found the command that works for disk, just fill it in without the path to the device. So, if you used "sg_start --stop /dev/sda" you should fill in "command = sg_start --stop".
 
 ====Idle-time parameter====
 
