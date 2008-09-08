@@ -1,5 +1,8 @@
 #labels Featured
 Spindown v0.2.2:
+07-09-2008:
+  * When the spindown command fails, this will be logged.\
+  * Synchronize writes before spindown.
 
 06-09-2008:
   * The command configuration options now expects the whole command to execute and not just
