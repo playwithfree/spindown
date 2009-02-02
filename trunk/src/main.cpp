@@ -158,7 +158,7 @@ void parseCommandline(int argc, char* argv[] )
 		<< "                          current directory." << endl
 		<< "  -c, --config-file     Path to the configuration file. The default is" << endl
 		<< "                          spindown.conf in the current directory." << endl
-		<< "  -d, --daemon	    Daemonize the the process." << endl;
+		<< "  -d, --daemon	    Daemonize the the process." << endl
 		<< "  -h, --help            Displays this text." << endl
 		<< "  -V, --version         Prints the version number." << endl << endl
 		<< "For more information and contact visit <http://projects.dimis-site.be>." <<endl;
