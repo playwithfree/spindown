@@ -1,3 +1,12 @@
+Spindown v0.3.0:
+02-02-2009:
+  * Removed unnecessary threads, spindown now runs in exactly one thread, no more, no less.
+  * Moved some code that didn't belong in the spindown object to main.cpp (signal handeling,
+    commandline parameter parsing and daemon code).
+  * Init script now follows LSB.
+
+===============================================================================
+
 Spindown v0.2.2:
 07-09-2008:
   * When the spindown command fails, this will be logged.
