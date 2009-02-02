@@ -1,6 +1,6 @@
 /**
  * Spindown is a daemon that can spindown idle discs.
- * Copyright (C) 2008  Dimitri Michaux <dimitri.michaux@gmail.com>
+ * Copyright (C) 2008-2009 Dimitri Michaux <dimitri.michaux@gmail.com>
  *
  * spindown.h:
  * The class declaration for Spindown. This class manages the parsing
@@ -35,16 +35,10 @@ using std::string;
 
 #include "general.h"
 #include "disk.h"
-#include "thread.h"
 
-class Spindown : public Thread
+class Spindown
 {
   public:
-    /**
-     * The signals to block
-     */
-    static sigset_t signalSet;
-
     /**
      * Constructor:
      * Does some basic checks and initialisations.
@@ -56,22 +50,20 @@ class Spindown : public Thread
     
     ~Spindown();
     
+    void setConfPath(string);
+
+    void setStatusPath(string);
+
     /**
      * This function will run as a thread.
      * It does the general loop.
      */
-    int execute();
+    int run();
     
     /**
-     * This function will run as a thread.
-     * It processes all signals
+     * Writes the current status to the status file.
      */
-    int signalHandler();
-    
-    /**
-     * A loop that checks the fifo and then writes to it when it is opend
-     */
-    void checkFifo();
+    void updateStatus();
     
     /**
      * Reads the config file from /proc/diskstats and passes it
@@ -89,7 +81,7 @@ class Spindown : public Thread
     /**
      * Path to the fifo
      */
-    string fifoPath;
+    string statusPath;
     
     /**
      * Path to the configuration file
@@ -112,39 +104,14 @@ class Spindown : public Thread
     DiskSet* disks;
 
     /**
-     * Turn the program into a daemon.
-     * Forks, changes the dir to "/" and closes stdin stdout stderr
-     */
-    void daemonize();
-    
-    /**
-     * Installs all signal handlers
-     * Currently just catches SIGHUP to reload configuration
-     */
-    void installSignalHandlers();
-    
-    /**
      * Reads the file /proc/diskstats and passes this line by line to
      * every disk.
      */
     void updateDiskstats(DiskSet* set);
     
     /**
-     * Parses the command line parameters.
-     * 
-     * @param   int     argc
-     * @param   char*[] argv
-     */
-    void parseCommandline(int, char* []);
-    
-    /**
      * Transforms relative paths to absolute ones.
      * This has to be done because we change dir with daemonize.
      */
     string relToAbs( string );
-
-    /**
-     * Mutex for thread synchronisation
-     */
-    pthread_mutex_t mutex;
 };

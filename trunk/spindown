@@ -1,23 +1,10 @@
 #!/bin/bash
 
-# Call this file like this: "DEBUG=1 ./spindown [OPTION]"
-# if you want to run in debug mode.
+DAEMON="/sbin/spindownd"
+STATUSPATH="/dev/shm/spindown.status"
+CONFPATH="/etc/spindown.conf"
 
-if [ $DEBUG ]; then
-
-  SPINDOWNPATH=`pwd`/spindownd
-  LOCKFILE=`pwd`/spindown.lock
-  FIFOPATH=`pwd`/spindown.fifo
-  CONFPATH=`pwd`/spindown.conf
-
-else
-
-  SPINDOWNPATH="/sbin/spindownd"
-  LOCKFILE="/var/lock/spindown.lock"
-  FIFOPATH="/var/run/spindown.fifo"
-  CONFPATH="/etc/spindown.conf"
-
-fi
+. /lib/lsb/init-functions
 
 # echo's the string and then the amount of spaces needed to fill it till length
 # $1 the string
@@ -48,76 +35,60 @@ spaces() {
 #prints table with status about the disks
 status() {
 
-  CHECK=`ps auxw | grep -i spindownd | grep -v grep | wc -l`
-
-  if [ $CHECK -ne 1 ]; then
-
-    echo "Daemon not running."
-    exit 1
-
-  fi
-
-  #print the header of the table
-  spaces "name" 15
-  spaces "watched" 15
-  spaces "active" 15
-  spaces "idle-time" 15
-  spaces "spindown-time" 15
-  echo ""
-
-  #build the rows with disks
-  declare -i i
-  i=0
-  for line in `cat $FIFOPATH`; do
-
-    remainder=`expr $i % 5`
-    if [ $remainder -eq 0 -a $i -ne 0 ]; then
-      echo ""
-      spaces $line 15
+    if [ $DEBUG ]; then
+	echo
     else
-      spaces $line 15
+	if status_of_proc $DAEMON spindown; then
+	    echo -n
+	else
+	    exit 1
+	fi
     fi
 
-    i=$i+1
-  done
+    #print the header of the table
+    spaces "name" 15
+    spaces "watched" 15
+    spaces "active" 15
+    spaces "idle-time" 15
+    spaces "spindown-time" 15
+    echo ""
 
-  echo ""
+    #build the rows with disks
+    declare -i i
+    i=0
+    for line in `cat $STATUSPATH`; do
+	remainder=`expr $i % 5`
+	if [ $remainder -eq 0 -a $i -ne 0 ]; then
+	echo ""
+	spaces $line 15
+	else
+	spaces $line 15
+	fi
+
+	i=$i+1
+    done
+
+    echo ""
+
+    exit 0
 }
 
 start() {
-
-    echo -n "Starting spindownd daemon... "
-
-    start-stop-daemon --start \
-            --exec ${SPINDOWNPATH} \
-            --name spindownd \
-            -- -f ${FIFOPATH} -c ${CONFPATH}
-
-    echo "done."
-
+    log_daemon_msg "Starting disk spindown daemon" "spindownd"
+    start_daemon $DAEMON -d -f $STATUSPATH -c $CONFPATH
+    log_end_msg $?
 }
 
 stop() {
-
-    echo -n "Stopping spindownd daemon... "
-
-    start-stop-daemon --stop \
-            --exec ${SPINDOWNPATH} \
-            --name spindownd
-
-    echo "done."
-
+    log_daemon_msg "Stopping disk spindown daemon" "spindownd"
+    killproc $DAEMON
+    log_end_msg $?
 }
 
 reload() {
-
-    echo -n "Sending SIGHUP to spindownd daemon: "
-    start-stop-daemon --stop \
-            --exec ${SPINDOWNPATH} \
-            --name spindownd \
-            --signal HUP
-    echo "...ok."
-
+    log_daemon_msg "Reloading disk spindown daemon" "spindownd"
+    killproc $DAEMON -hup
+    log_end_msg $?
 }
 
 case "$1" in
