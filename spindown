@@ -34,17 +34,6 @@ spaces() {
 
 #prints table with status about the disks
 status() {
-
-    if [ $DEBUG ]; then
-	echo
-    else
-	if status_of_proc $DAEMON spindown; then
-	    echo -n
-	else
-	    exit 1
-	fi
-    fi
-
     #print the header of the table
     spaces "name" 15
     spaces "watched" 15
@@ -73,41 +62,44 @@ status() {
     exit 0
 }
 
-start() {
-    log_daemon_msg "Starting disk spindown daemon" "spindownd"
-    start_daemon $DAEMON -d -f $STATUSPATH -c $CONFPATH
-    log_end_msg $?
-}
-
-stop() {
-    log_daemon_msg "Stopping disk spindown daemon" "spindownd"
-    killproc $DAEMON
-    log_end_msg $?
-}
-
-reload() {
-    log_daemon_msg "Reloading disk spindown daemon" "spindownd"
-    killproc $DAEMON -hup
-    log_end_msg $?
-}
-
 case "$1" in
   "start")
-        start
+	log_daemon_msg "Starting disk spindown daemon" "spindownd"
+	start_daemon $DAEMON -d -f $STATUSPATH -c $CONFPATH
+	log_end_msg $?
+
+	exit $?
         ;;
   "stop")
-        stop
+	log_daemon_msg "Stopping disk spindown daemon" "spindownd"
+	killproc $DAEMON
+	log_end_msg $?
+
+	exit $?
         ;;
   "status")
-        #by outputting it like this it all appears on the screen in one time
+	if status_of_proc $DAEMON spindown; then
+	    echo -n
+	else
+	    exit 1
+	fi
+
         echo "`status`"
+
+	exit 0
         ;;
   "restart"|"condrestart")
-        stop
-        start
+        $0 stop
+        $0 start
+
+	exit $?
         ;;
   "reload")
-        reload
+	log_daemon_msg "Reloading disk spindown daemon" "spindownd"
+	killproc $DAEMON -hup
+	log_end_msg $?
+
+	exit $?
         ;;
   *)
         echo "Usage: $0 {start|stop|restart|reload|status}"

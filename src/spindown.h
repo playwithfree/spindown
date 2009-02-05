@@ -49,27 +49,24 @@ class Spindown
     Spindown(int, char* []);
     
     ~Spindown();
-    
-    void setConfPath(string);
-
-    void setStatusPath(string);
 
     /**
-     * This function will run as a thread.
-     * It does the general loop.
+     * Preforms one cycle.
+     * Updates disk stats and spins the disks down if needed.
      */
-    int run();
+    int cycle();
     
     /**
      * Writes the current status to the status file.
      */
-    void updateStatus();
+    string getStatusString(bool all=false);
     
     /**
-     * Reads the config file from /proc/diskstats and passes it
-     * line by line to every disk.
+     * Reads the config file and applies all the options.
      */
-    void readConfig(string* confPath=0);
+    void readConfig(string const &path);
+
+    void wait();
 
   private:
 
@@ -77,16 +74,6 @@ class Spindown
      * Time between two cycles in seconds
      */
     unsigned int cycleTime;
-    
-    /**
-     * Path to the fifo
-     */
-    string statusPath;
-    
-    /**
-     * Path to the configuration file
-     */
-    string confPath;
     
     /**
      * Path from where the script was started
@@ -103,15 +90,11 @@ class Spindown
      */
     DiskSet* disks;
 
+    void spinDownDisks();
+
     /**
      * Reads the file /proc/diskstats and passes this line by line to
      * every disk.
      */
     void updateDiskstats(DiskSet* set);
-    
-    /**
-     * Transforms relative paths to absolute ones.
-     * This has to be done because we change dir with daemonize.
-     */
-    string relToAbs( string );
 };
