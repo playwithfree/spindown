@@ -90,20 +90,6 @@ Disk::~Disk()
 {
 }
 
-void Disk::update( unsigned char command, string value )
-{
-  switch( command )
-  {
-    case CMD_DISKSTATS:
-      updateStats( value );
-      break;
-
-    case CMD_BYID:
-      findDevName( value );
-      break;
-  }
-}
-
 void Disk::updateStats( string input )
 {
   if( devName == "" )
@@ -176,51 +162,28 @@ void Disk::findDevName( string dev )
   }
 }
 
-void Disk::doSpinDown(unsigned int sgTime)
+bool Disk::spindown()
 {
-  string cmd = command + " /dev/" + devName;
+    if (devName!= "" && spinDown)
+    {
+        string cmd = command + " /dev/" + devName;
 
-  // Entries with bad device names cannot be spun down
-  if (devName == "")
-    return;
-
-  // if no spindown time was configured, use the passed default vaule
-  if (spinDownTime())
-    sgTime = spinDownTime();
-
-  //spindown the disk if it is idle for long enough
-  //and when it should be spundown and when it is active
-  if( idleTime() < sgTime || !active || !spinDown )
-    return;
-
-  //synchronize writes
-  sync();
-
-  if(int ret=system(cmd.data()) == 0) {
-    string message = "Spinning down disk \"" + devName + "\"";
-    Log::get()->message( LOG_INFO, message );
-  }
-  else {
-      ostringstream oss;
-      oss << "Spindown failed: \"" << cmd << "\" returned " << ret;
-      Log::get()->message( LOG_INFO, oss.str() );
-  }
-
-  //set disk as inactive
-  active = false;
-}
-
-int Disk::countEntries(DiskSet const & search)  const
-{
-  int count = 0;
-
-  for( int i=0 ; i < search.size() ; i++ )
-  {
-    if( search[i]->getName() == devName  )
-      count++;
-  }
-
-  return count;
+        if(int ret=system(cmd.data()) == 0)
+        {
+            string message = devName + " is now inactive.";
+            Log::get()->message( LOG_INFO, message );
+            //mark disk as inactive
+            active = false;
+            return true;
+        }
+        else
+        {
+            ostringstream oss;
+            oss << "failed: \"" << cmd << "\" returned " << ret;
+            Log::get()->message( LOG_INFO, oss.str() );
+            return false;
+        }
+    }
 }
 
 string Disk::getName() const
@@ -254,18 +217,4 @@ void Disk::setStatsFrom(Disk const & disk)
   lastActive        = disk.lastActive;
   active            = disk.active;
   spinDown          = disk.spinDown;
-}
-
-void Disk::showStats(ostream& out, unsigned int sgTime) const
-{
-  if (devName == "")
-    return;
-
-  out << this->getName()
-      << " " << this->isWatched()
-      << " " << this->isActive()
-      << " " << this->idleTime()
-      << " " << (this->spinDownTime() ? this->spinDownTime() : sgTime )
-      << std::endl;
-  return;
 }

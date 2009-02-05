@@ -28,11 +28,13 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <sstream>
 
 using std::string;
 using std::vector;
 using std::ifstream;
 using std::ios;
+using std::ostringstream;
 
 #include <time.h>
 #include <dirent.h>
@@ -75,12 +77,12 @@ void DiskSet::setStatsFrom(DiskSet const & set)
 
     // if the found element appears multiple times in
     // the other set, we don't know which one to take...
-    if (found->countEntries(set) != 1)
+    if (this->countEntries(*found) != 1)
       continue;
 
     // if the found element appears multiple times in
     // our list, we don't know which one to take...
-    if (found->countEntries(*this) != 1)
+    if (this->countEntries(*found) != 1)
       continue;
 
     found->setStatsFrom(*set[i]);
@@ -117,7 +119,7 @@ void DiskSet::updateDevNames()
     while (ep = readdir (dp))
     {
       for( int i=0 ; i < this->size() ; i++ )
-        this->at(i)->update( CMD_BYID, ep->d_name );
+        this->at(i)->findDevName(ep->d_name);
     }
     (void) closedir (dp);
   }
@@ -125,7 +127,7 @@ void DiskSet::updateDevNames()
 
 void DiskSet::updateDiskstats()
 {
-  ifstream fin( STATS_PATH, ios::in );
+  ifstream fin(STATS_PATH, ios::in);
   char str[CHAR_BUF];
 
   if( fin )
@@ -133,46 +135,31 @@ void DiskSet::updateDiskstats()
     while( fin.getline(str,CHAR_BUF) )
     {
       for( int i=0 ; i < this->size() ; i++ )
-        this->at(i)->update( CMD_DISKSTATS, str );
+        this->at(i)->updateStats(str);
     }
     fin.close();
   }
 }
 
-void DiskSet::doSpinDown()
+int DiskSet::countEntries(Disk const & search)  const
 {
+  int count = 0;
+
   for( int i=0 ; i < this->size() ; i++ )
   {
-    Disk* disk = this->at(i);
-
-    if (! disk)
-      continue;
-
-    // if more than one entry is found we cannot determine
-    // which entry to spindown. So we ignore this case
-    if (disk->countEntries(*this) != 1)
-      continue;
-
-    // the actual decision to spindown is made by the
-    // individual objects
-    disk->doSpinDown(commonSpinDownTime);
+    if( this->at(i)->getName() == search.getName() )
+      count++;
   }
-}
 
-void DiskSet::showStats(ostream& out, bool all)  const
-{
-  for( int i=0 ; i < this->size() ; i++ )
-  {
-    Disk* disk = this->at(i);
-
-    if (!all && disk->countEntries(*this) != 1)
-      continue;
-
-    disk->showStats(out,this->commonSpinDownTime);
-  }
+  return count;
 }
 
 void DiskSet::setCommonSpinDownTime(unsigned int sgTime)
 {
   commonSpinDownTime = sgTime;
+}
+
+unsigned int DiskSet::getCommonSpindownTime()
+{
+    return commonSpinDownTime;
 }

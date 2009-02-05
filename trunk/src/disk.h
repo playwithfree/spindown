@@ -84,16 +84,25 @@ class Disk
     ~Disk();
 
     /**
-     * Update a paramaters from the disc.
-     * This function expects processes a line from either /dev/disk/by-id or
-     * either /proc/diskstats. This function automaticly grabs the values it needs
-     * form value.
+     * Finds the dev name for the current dev id and puts it in devName
+     * If no dev name is found devName will be empty. This means the device
+     * is not present.
      *
-     * @param       string  command This can either be "by-id" or "diskstats"
-     * @param       string  value   For diskstats a line from diskstats, for by-id
-     *                                one of the links to a device in by-id
+     * When this function receives "." as dev it resets the device name.
+     * This is because readdir starts with ".".
+     *
+     * @param       string  dev   the name of a link in /dev/disk/by-id
      */
-    void update( unsigned char command, string value );
+    void findDevName( string dev );
+
+    /**
+     * Update the values
+     * This function only needs a line from diskstats and then
+     * only uses the information it needs
+     *
+     * @param       char*   input   a char array containing a line from diskstats
+     */
+    void updateStats( string input );
 
     /**
      * Returns the id of the device as in /dev/disk/by-id
@@ -142,11 +151,9 @@ class Disk
     unsigned int spinDownTime() const;
 
     /**
-     * Writes the current disks stats & configuration to the passed
-     * ofstream. The stream must be already open. This is used for
-     * the status fifo
+     * Spinsdown the disc with the right command.
      */
-    void showStats(ostream& out, unsigned int sgTime) const;
+    bool spindown();
 
   protected:
 
@@ -202,44 +209,6 @@ class Disk
      * Time is in seconds, 0 is unconfigured
      */
     unsigned int localSpinDownTime;
-
-    /**
-     * Finds the dev name for the current dev id and puts it in devName
-     * If no dev name is found devName will be empty. This means the device
-     * is not present.
-     *
-     * When this function receives "." as dev it resets the device name.
-     * This is because readdir starts with ".".
-     *
-     * @param       string  dev   the name of a link in /dev/disk/by-id
-     */
-    void findDevName( string dev );
-
-    /**
-     * Update the values
-     * This function only needs a line from diskstats and then
-     * only uses the information it needs
-     *
-     * @param       char*   input   a char array containing a line from diskstats
-     */
-    void updateStats( string input );
-
-    /**
-     * Spinsdown the disc with the right command.
-     *
-     * @param       unsigned int  sgTime   the default spindown time
-     */
-    void doSpinDown(unsigned int sgTime);
-
-    /**
-     * Count occurences of this object in the passed DiskSet
-     * This method uses the name of this object to check how many objects
-     * in the passed DiskSet have the same name
-     *
-     * @param        DiskSet* search  The DiskSet to search
-     * @return       int     Number of duplicates found
-     */
-    int countEntries(DiskSet const & search) const;
 };
 
 #endif

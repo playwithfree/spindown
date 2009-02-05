@@ -65,26 +65,13 @@ class DiskSet : public vector<Disk*>
     void updateDiskstats();
 
     /**
-     * Spinsdown all disks.
-     */
-    void doSpinDown();
-
-    /**
      * Sets the common spindown time
      *
      * @param unsigned int sgTime The new spindown time
      */
     void setCommonSpinDownTime(unsigned int sgTime);
 
-    /**
-     * Writes the current disks stats & configuration to the passed
-     * ofstream. The stream must be already open. This is used for
-     * the status fifo
-     *
-     * @param ostream& out The stream to write the output to
-     * @param bool     all If true, write all configured disks, even if not present
-     */
-    void showStats(ostream& Out, bool all = false) const;
+    unsigned int getCommonSpindownTime();
 
     /**
      * Update the internal statistics of all disks.
@@ -103,6 +90,16 @@ class DiskSet : public vector<Disk*>
      * @return Disk* disk The found disk, 0 if no disk was found
      */
     Disk* find(Disk const& disk);
+
+    /**
+     * Count occurences of this object in the passed DiskSet
+     * This method uses the name of this object to check how many objects
+     * in the passed DiskSet have the same name
+     *
+     * @param        DiskSet* search  The DiskSet to search
+     * @return       int     Number of duplicates found
+     */
+    int countEntries(Disk const & search) const;
 
   private:
 
