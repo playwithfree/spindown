@@ -10,26 +10,24 @@ CONFPATH="/etc/spindown.conf"
 # $1 the string
 # $2 the desired length
 spaces() {
+    declare -i i
+    declare -i diff
+    diff=$2-${#1}
 
-  declare -i i
-  declare -i diff
-  diff=$2-${#1}
+    #at least one space between values
+    if [ $diff -lt 1 ]; then
+        diff=1
+    fi
 
-  #at least one space between values
-  if [ $diff -lt 1 ]; then
-    diff=1
-  fi
+    #print the string
+    echo -n $1
 
-  #print the string
-  echo -n $1
-
-  #print the remaining spaces
-  i=0
-  while [ $i -lt $diff ]; do
-    echo -n " "
-    i=$i+1
-  done
-
+    #print the remaining spaces
+    i=0
+    while [ $i -lt $diff ]; do
+        echo -n " "
+        i=$i+1
+    done
 }
 
 #prints table with status about the disks
@@ -46,15 +44,15 @@ status() {
     declare -i i
     i=0
     for line in `cat $STATUSPATH`; do
-	remainder=`expr $i % 5`
-	if [ $remainder -eq 0 -a $i -ne 0 ]; then
-	echo ""
-	spaces $line 15
-	else
-	spaces $line 15
-	fi
+        remainder=`expr $i % 5`
+        if [ $remainder -eq 0 -a $i -ne 0 ]; then
+            echo ""
+            spaces $line 15
+        else
+            spaces $line 15
+        fi
 
-	i=$i+1
+        i=$i+1
     done
 
     echo ""
@@ -63,47 +61,47 @@ status() {
 }
 
 case "$1" in
-  "start")
-	log_daemon_msg "Starting disk spindown daemon" "spindownd"
-	start_daemon $DAEMON -d -s $STATUSPATH -c $CONFPATH
-	log_end_msg $?
+    "start")
+        log_daemon_msg "Starting disk spindown daemon" "spindownd"
+        start_daemon $DAEMON -d -s $STATUSPATH -c $CONFPATH
+        log_end_msg $?
 
-	exit $?
-        ;;
-  "stop")
-	log_daemon_msg "Stopping disk spindown daemon" "spindownd"
-	killproc $DAEMON
-	log_end_msg $?
+        exit $?
+            ;;
+    "stop")
+        log_daemon_msg "Stopping disk spindown daemon" "spindownd"
+        killproc $DAEMON
+        log_end_msg $?
 
-	exit $?
-        ;;
-  "status")
-	if status_of_proc $DAEMON spindown; then
-	    echo -n
-	else
-	    exit 1
-	fi
+        exit $?
+            ;;
+    "status")
+        if status_of_proc $DAEMON spindown; then
+            echo -n
+        else
+            exit 1
+        fi
 
-        echo "`status`"
+            echo "`status`"
 
-	exit 0
-        ;;
-  "restart"|"condrestart")
-        $0 stop
-        $0 start
+        exit 0
+            ;;
+    "restart"|"condrestart")
+            $0 stop
+            $0 start
 
-	exit $?
-        ;;
-  "reload")
-	log_daemon_msg "Reloading disk spindown daemon" "spindownd"
-	killproc $DAEMON -hup
-	log_end_msg $?
+        exit $?
+            ;;
+    "reload")
+        log_daemon_msg "Reloading disk spindown daemon" "spindownd"
+        killproc $DAEMON -HUP
+        log_end_msg $?
 
-	exit $?
-        ;;
-  *)
-        echo "Usage: $0 {start|stop|restart|reload|status}"
-        exit 1
+        exit $?
+            ;;
+    *)
+            echo "Usage: $0 {start|stop|restart|reload|status}"
+            exit 1
 esac
 
 exit 0
