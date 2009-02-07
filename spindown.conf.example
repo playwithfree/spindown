@@ -45,3 +45,5 @@ syslog = 0          # Turn this on if you want spindown to log messages using sy
 # name = sda
 # spindown = 1
 # command = hdparm -y
+
+# Because of a bug in iniParser you should leave an empty line at the bottom of this file.
