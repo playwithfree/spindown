@@ -65,7 +65,7 @@ status() {
 case "$1" in
   "start")
 	log_daemon_msg "Starting disk spindown daemon" "spindownd"
-	start_daemon $DAEMON -d -f $STATUSPATH -c $CONFPATH
+	start_daemon $DAEMON -d -s $STATUSPATH -c $CONFPATH
 	log_end_msg $?
 
 	exit $?
