@@ -4,8 +4,3 @@
 #define STATS_PATH "/proc/diskstats"
 #define CHAR_BUF   256
 #define VERSION    "0.3.0"
-
-/*  These are commands that are send by Spindown and
-    are accepted by Disk. They are unsigned chars     */
-#define CMD_DISKSTATS 0
-#define CMD_BYID      1
