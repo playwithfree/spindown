@@ -89,6 +89,7 @@ void sigHandler(int signalNumber)
             break;
             
         case SIGPIPE: {
+            spindown->updateStats();
             ofstream status;
             status.open(statusPath.data());
             status << spindown->getStatusString();
