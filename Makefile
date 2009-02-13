@@ -1,14 +1,14 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
 VERSION = 0.3.0
-OBJS = diskset.o disk.o spindown.o iniparser.o dictionary.o log.o
+OBJS = main.o diskset.o disk.o spindown.o iniparser.o dictionary.o log.o
 CC = g++
 CFLAGS =-O1 -pthread
 SRC = src/
 INPARSER = $(SRC)ininiparser3.0b/
 
 all: $(OBJS)
-	g++ $(CFLAGS) -o spindownd $(SRC)main.cpp $(OBJS)
+	g++ $(CFLAGS) -o spindownd $(OBJS)
 	@echo "---"
 	@echo "THE CONFIGURATION FILE HAS CHANGED SINCE V0.2.1!!!!"
 	@echo "Please see the changelog and the example configuration file for more information."
@@ -49,6 +49,9 @@ dist:
 	DESTDIR=spindown-$(VERSION) make install
 	tar czf spindown-$(VERSION).tar.gz spindown-$(VERSION)
 	rm -d -r -f spindown-$(VERSION)
+
+main.o: $(SRC)main.cpp
+	g++ $(CFLAGS) -c $(SRC)main.cpp
 
 diskset.o: $(SRC)diskset.cpp
 	g++ $(CFLAGS) -c $(SRC)diskset.cpp
