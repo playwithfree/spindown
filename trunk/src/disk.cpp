@@ -123,7 +123,6 @@ void Disk::updateStats( string input )
         //if the disk was not active log a message
         if( !active )
         {
-            string message;
             string message = devName + " is now active.";
 
             Log::get()->message( LOG_INFO, message );
