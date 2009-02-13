@@ -3,6 +3,7 @@
 DAEMON="/sbin/spindownd"
 STATUSPATH="/dev/shm/spindown.status"
 CONFPATH="/etc/spindown.conf"
+PIDFILE="/var/run/spindownd.pid"
 
 . /lib/lsb/init-functions
 
@@ -63,7 +64,7 @@ status() {
 case "$1" in
     "start")
         log_daemon_msg "Starting disk spindown daemon" "spindownd"
-        start_daemon $DAEMON -d -s $STATUSPATH -c $CONFPATH
+        start_daemon -p $PIDFILE $DAEMON -d -s $STATUSPATH -c $CONFPATH -p $PIDFILE
         log_end_msg $?
 
         exit $?
@@ -71,20 +72,20 @@ case "$1" in
 
     "stop")
         log_daemon_msg "Stopping disk spindown daemon" "spindownd"
-        killproc $DAEMON
+        killproc -p $PIDFILE $DAEMON
         log_end_msg $?
 
         exit $?
         ;;
 
     "status")
-        if status_of_proc $DAEMON spindown; then
+        if status_of_proc -p $PIDFILE $DAEMON spindown; then
             echo -n
         else
             exit 1
         fi
 
-        killproc $DAEMON -POLL
+        killproc -p $PIDFILE $DAEMON -POLL
         echo "`status`"
 
         exit 0
@@ -99,7 +100,7 @@ case "$1" in
 
     "reload")
         log_daemon_msg "Reloading disk spindown daemon" "spindownd"
-        killproc $DAEMON -HUP
+        killproc -p $PIDFILE $DAEMON -HUP
         log_end_msg $?
 
         exit $?
