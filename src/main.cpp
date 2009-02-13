@@ -66,7 +66,7 @@ int main( int argc, char* argv[] )
     signal(SIGHUP, sigHandler);
     signal(SIGTERM, sigHandler);
     signal(SIGINT, sigHandler);
-    signal(SIGPOLL, sigHandler);
+    signal(SIGPIPE, sigHandler);
     
     while( true )
     {        
@@ -88,7 +88,7 @@ void sigHandler(int signalNumber)
             spindown->readConfig(confPath);
             break;
             
-        case SIGPOLL: {
+        case SIGPIPE: {
             ofstream status;
             status.open(statusPath.data());
             status << spindown->getStatusString();
