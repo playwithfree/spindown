@@ -38,6 +38,7 @@ using std::ofstream;
 using std::string;
 
 #include "spindown.h"
+#include "log.h"
 
 void sigHandler(int);
 void daemonize();
@@ -67,6 +68,9 @@ int main( int argc, char* argv[] )
     signal(SIGTERM, sigHandler);
     signal(SIGINT, sigHandler);
     signal(SIGPIPE, sigHandler);
+    
+    //notify about being started
+    Log::get()->message( LOG_INFO, "spindown started" );
     
     while( true )
     {        
@@ -102,6 +106,7 @@ void sigHandler(int signalNumber)
             delete spindown;
             remove(statusPath.data());
             remove(pidPath.data());
+            Log::get()->message(LOG_INFO, "spindown stopped");
             exit(EXIT_SUCCESS);
             break;
 

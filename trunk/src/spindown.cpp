@@ -50,15 +50,9 @@ Spindown::Spindown( int argc, char* argv[] )
 {
     disks = 0;
     cycleTime = 60;
-    
-    //notify about being started
-    Log::get()->message( LOG_INFO, "spindown started" );
 }
 
-Spindown::~Spindown()
-{
-    Log::get()->message(LOG_INFO, "spindown stopped");
-}
+Spindown::~Spindown(){};
 
 void Spindown::wait()
 {
