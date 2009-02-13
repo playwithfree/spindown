@@ -1,4 +1,7 @@
 Spindown v0.3.0:
+13-02-2009:
+  * The status file is now only updated when the daemon receives the SIGPOLL.
+
 02-02-2009:
   * Removed unnecessary threads, spindown now runs in exactly one thread, no more, no less.
   * Moved some code that didn't belong in the spindown object to main.cpp (signal handeling,

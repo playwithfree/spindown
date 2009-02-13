@@ -65,6 +65,11 @@ void Spindown::wait()
     sleep( cycleTime );
 }
 
+void Spindown::updateStats()
+{
+    disks->updateDiskstats();
+}
+
 int Spindown::cycle()
 {
     disks->updateDevNames();

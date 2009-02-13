@@ -67,14 +67,16 @@ case "$1" in
         log_end_msg $?
 
         exit $?
-            ;;
+        ;;
+
     "stop")
         log_daemon_msg "Stopping disk spindown daemon" "spindownd"
         killproc $DAEMON
         log_end_msg $?
 
         exit $?
-            ;;
+        ;;
+
     "status")
         if status_of_proc $DAEMON spindown; then
             echo -n
@@ -82,26 +84,30 @@ case "$1" in
             exit 1
         fi
 
-            echo "`status`"
+        killproc $DAEMON -POLL
+        echo "`status`"
 
         exit 0
-            ;;
+        ;;
+
     "restart"|"condrestart")
-            $0 stop
-            $0 start
+        $0 stop
+        $0 start
 
         exit $?
-            ;;
+        ;;
+
     "reload")
         log_daemon_msg "Reloading disk spindown daemon" "spindownd"
         killproc $DAEMON -HUP
         log_end_msg $?
 
         exit $?
-            ;;
+        ;;
+
     *)
-            echo "Usage: $0 {start|stop|restart|reload|status}"
-            exit 1
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
 esac
 
 exit 0
