@@ -111,7 +111,7 @@ string Spindown::getStatusString( bool all )
     {
         Disk* disk = disks->at(i);
 
-        if (all || disks->countEntries(*disk) == 1)
+        if (all || (disks->countEntries(*disk) == 1 && disk->getName()!=""))
         {
             status << (disk->getName()=="" ? "none" : disk->getName()) << " "
                 << disk->isWatched() << " "
