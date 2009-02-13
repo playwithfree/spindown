@@ -124,7 +124,7 @@ void Disk::updateStats( string input )
         if( !active )
         {
             string message;
-            message = "Disk \"" + devName + "\" is active";
+            string message = devName + " is now active.";
 
             Log::get()->message( LOG_INFO, message );
         }
