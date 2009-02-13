@@ -66,6 +66,14 @@ class Spindown
      */
     void readConfig(string const &path);
 
+    /**
+     * Updates the disk stats, but doesn't do anything else.
+     */
+    void updateStats();
+
+    /**
+     * Wait cycleTime seconds.
+     */
     void wait();
 
   private:
@@ -91,10 +99,4 @@ class Spindown
     DiskSet* disks;
 
     void spinDownDisks();
-
-    /**
-     * Reads the file /proc/diskstats and passes this line by line to
-     * every disk.
-     */
-    void updateDiskstats(DiskSet* set);
 };
