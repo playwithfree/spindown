@@ -7,8 +7,7 @@ CFLAGS =-O1 -pthread
 SRC = src/
 INPARSER = $(SRC)ininiparser3.0b/
 
-all: $(OBJS)
-	g++ $(CFLAGS) -o spindownd $(OBJS)
+all: spindownd
 	@echo "---"
 	@echo "THE CONFIGURATION FILE HAS CHANGED SINCE V0.2.1!!!!"
 	@echo "Please see the changelog and the example configuration file for more information."
@@ -19,7 +18,6 @@ clean:
 
 install: all
 	install -D -m 755 spindownd $(sbindir)/spindownd
-#install --backup -D -m 644 spindown.conf $(etcdir)/spindown.conf
 	install -D -m 755 spindown $(etcdir)/init.d/spindown
 
 #make the links in rc.d
@@ -47,8 +45,11 @@ uninstall:
 
 dist:
 	DESTDIR=spindown-$(VERSION) make install
-	tar czf spindown-$(VERSION).tar.gz spindown-$(VERSION)
+	tar -czf spindown-$(VERSION).tar.gz -C spindown-$(VERSION) .
 	rm -d -r -f spindown-$(VERSION)
+
+spindownd: $(OBJS)
+	g++ $(CFLAGS) -o spindownd $(OBJS)
 
 main.o: $(SRC)main.cpp
 	g++ $(CFLAGS) -c $(SRC)main.cpp
