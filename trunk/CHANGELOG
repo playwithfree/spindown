@@ -1,4 +1,7 @@
 Spindown v0.3.0:
+15-02-2009:
+  * Moved the code that reads the configuration file out of spindown and into main.
+
 13-02-2009:
   * The status file is now only updated when the daemon receives the SIGPOLL.
 

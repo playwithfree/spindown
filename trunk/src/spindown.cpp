@@ -25,11 +25,7 @@
 #include "disk.h"
 #include "log.h"
 
-#include "ininiparser3.0b/iniparser.h"
-#include "ininiparser3.0b/dictionary.h"
-
 #include <string>
-#include <fstream>
 #include <sstream>
 #include <iostream>
 
@@ -117,74 +113,4 @@ string Spindown::getStatusString( bool all )
     }
 
     return status.str();
-}
-
-void Spindown::readConfig(string const &path)
-{
-    dictionary* ini;
-    string section;
-    string input;
-    DiskSet* newDiskSet;
-    int commonSpinDownTime = 7200;
-
-    //try to open the configuration file
-    if( (ini=iniparser_load(path.data()))==NULL )
-        exit(1);
-
-    newDiskSet = new DiskSet;
-
-    //go trough the sections of the file
-    for( int i=0 ; i < iniparser_getnsec(ini) ; i++ )
-    {
-        //read the name of the section
-        section = iniparser_getsecname(ini, i);
-
-        //general section?
-        if( section=="general" )
-        {
-            commonSpinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
-
-            if( commonSpinDownTime <= 0 )
-                commonSpinDownTime = 7200;
-
-            cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
-
-            logMessages = iniparser_getboolean(ini, string(section+":syslog").data(), 0);
-        }
-        //disk?
-        else if( section.substr(0,4) == "disk" )
-        {
-            // the parsing of the configuration is up to the Disk class
-            Disk* newDisk = Disk::create(*ini, section);
-
-            if (!newDisk)
-                continue;
-
-            newDiskSet->push_back(newDisk);
-        }
-    }
-
-    //free the memory of the directory
-    iniparser_freedict(ini);
-
-    //initialize logging
-    if( logMessages )
-        Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
-    else
-        Log::get()->close();
-
-    // initialise both the DiskSet as the Disks
-    newDiskSet->setCommonSpinDownTime(commonSpinDownTime);
-
-    // if a previous configuration exists, copy the internal status
-    // to the new configuration and delete the old one
-    if (disks)
-    {
-        newDiskSet->updateDevNames();
-        disks->updateDevNames();
-        newDiskSet->setStatsFrom(*disks);
-        delete disks;
-    }
-
-    disks = newDiskSet;
 }
