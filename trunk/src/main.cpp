@@ -198,6 +198,10 @@ void parseCommandline(int argc, char* argv[] )
         daemonize();
 }
 
+/**
+ * Use iniparser to pass the configuration file and use those values to configure
+ * the spindown object.
+ */
 void readConfig(string const &path)
 {
     dictionary* ini;
