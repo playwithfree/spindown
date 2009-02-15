@@ -36,7 +36,6 @@ using std::ostringstream;
 
 #include <time.h>
 #include <dirent.h>
-#include <unistd.h>
 #include <stddef.h>
 #include <sys/types.h>
 #include <sys/stat.h>

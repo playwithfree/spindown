@@ -36,6 +36,7 @@ using std::cerr;
 using std::endl;
 using std::ostringstream;
 
+#include <unistd.h>
 #include <dirent.h>
 #include <cstdlib>
 #include <sys/types.h>
@@ -69,6 +70,9 @@ int Spindown::cycle()
 
 void Spindown::spinDownDisks()
 {
+    //commit buffer cache to disk 
+    sync();
+    
     for( int i=0 ; i < disks->size() ; i++ )
     {
         Disk* disk = disks->at(i);
