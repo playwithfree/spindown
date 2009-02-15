@@ -3,9 +3,8 @@
 * Copyright (C) 2008-2009 Dimitri Michaux <dimitri.michaux@gmail.com>
 *
 * main.cpp:
-* Initializes the Spindown object and sends commnandline parameters to
-* it, it also starts the main thread from spindown and starts the loop
-* that checks the fifo.
+* Initializes the Spindown object, configures it and then runs the main
+* loop.
 * 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -39,11 +38,18 @@ using std::string;
 
 #include "spindown.h"
 #include "log.h"
+#include "disk.h"
+#include "diskset.h"
 
+#include "ininiparser3.0b/iniparser.h"
+#include "ininiparser3.0b/dictionary.h"
+
+void installSignals();
 void sigHandler(int);
 void daemonize();
 void parseCommandline(int, char**);
 string relToAbs(string);
+void readConfig(string const &);
 
 // Global variables: the horror!
 Spindown* spindown;
@@ -60,14 +66,9 @@ int main( int argc, char* argv[] )
     spindown = new Spindown( argc, argv );
     
     parseCommandline(argc, argv);
+    readConfig(confPath);
     
-    //now load configuration file
-    spindown->readConfig(confPath);
-    
-    signal(SIGHUP, sigHandler);
-    signal(SIGTERM, sigHandler);
-    signal(SIGINT, sigHandler);
-    signal(SIGPIPE, sigHandler);
+    installSignals();
     
     //notify about being started
     Log::get()->message( LOG_INFO, "spindown started" );
@@ -81,6 +82,14 @@ int main( int argc, char* argv[] )
     return 0;
 }
 
+void installSignals()
+{
+    signal(SIGHUP, sigHandler);
+    signal(SIGTERM, sigHandler);
+    signal(SIGINT, sigHandler);
+    signal(SIGPIPE, sigHandler);
+}
+
 /**
 * Handles signals
 */
@@ -89,7 +98,7 @@ void sigHandler(int signalNumber)
     switch( signalNumber )
     {
         case SIGHUP:
-            spindown->readConfig(confPath);
+            readConfig(confPath);
             break;
             
         case SIGPIPE: {
@@ -98,8 +107,7 @@ void sigHandler(int signalNumber)
             status.open(statusPath.data());
             status << spindown->getStatusString();
             status.close();
-            }
-            break;
+            } break;
 
         case SIGINT:
         case SIGTERM:
@@ -116,50 +124,8 @@ void sigHandler(int signalNumber)
 }
 
 /**
-* Detach from terminal and save the pid file. 
-*/
-void daemonize()
-{
-    /* Our process ID and Session ID */
-    pid_t pid, sid;
-
-    /* Fork off the parent process */
-    pid = fork();
-    if (pid < 0)
-    exit(EXIT_FAILURE);
-
-    /* If we got a good PID, then
-    we can exit the parent process. */
-    if (pid > 0)
-    {
-        //save the pid file
-        ofstream pidFile;
-        pidFile.open(pidPath.data());
-        pidFile << pid;
-        pidFile.close();
-        exit(EXIT_SUCCESS);
-    }
-
-    /* Change the file mode mask */
-    umask(0);
-
-    /* Open any logs here */
-
-    /* Create a new SID for the child process */
-    sid = setsid();
-    if (sid < 0)
-    exit(EXIT_FAILURE);
-
-    /* Change the current working directory */
-    if ((chdir("/")) < 0)
-    exit(EXIT_FAILURE);
-
-    /* Close out the standard file descriptors */
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
-}
-
+ * Read commandline parameters and store the settings.
+ */
 void parseCommandline(int argc, char* argv[] )
 {
     bool makeDaemon = false;
@@ -227,8 +193,122 @@ void parseCommandline(int argc, char* argv[] )
         }
     }
     
+    // do this last to give the program a chance to print error messages, if any
     if(makeDaemon)
         daemonize();
+}
+
+void readConfig(string const &path)
+{
+    dictionary* ini;
+    string section;
+    string input;
+    DiskSet* newDiskSet;
+    int commonSpinDownTime = 7200;
+
+    //try to open the configuration file
+    if( (ini=iniparser_load(path.data()))==NULL )
+    {
+        std::cerr << "Can't open the configuration file: " << path << endl;
+        exit(1);
+    }
+
+    newDiskSet = new DiskSet;
+
+    //go trough the sections of the file
+    for( int i=0 ; i < iniparser_getnsec(ini) ; i++ )
+    {
+        //read the name of the section
+        section = iniparser_getsecname(ini, i);
+
+        //general section?
+        if( section=="general" )
+        {
+            commonSpinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
+
+            if( commonSpinDownTime <= 0 )
+                commonSpinDownTime = 7200;
+
+            spindown->cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
+
+            if( iniparser_getboolean(ini, string(section+":syslog").data(), 0) )
+                Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
+            else
+                Log::get()->close();
+        }
+        //disk?
+        else if( section.substr(0,4) == "disk" )
+        {
+            // the parsing of the configuration is up to the Disk class
+            Disk* newDisk = Disk::create(*ini, section);
+
+            if (!newDisk)
+                continue;
+
+            newDiskSet->push_back(newDisk);
+        }
+    }
+
+    //free the memory of the directory
+    iniparser_freedict(ini);
+
+    // initialise both the DiskSet as the Disks
+    newDiskSet->setCommonSpinDownTime(commonSpinDownTime);
+
+    // if a previous configuration exists, copy the internal status
+    // to the new configuration and delete the old one
+    if (spindown->disks)
+    {
+        newDiskSet->updateDevNames();
+        spindown->disks->updateDevNames();
+        newDiskSet->setStatsFrom(*spindown->disks);
+        delete spindown->disks;
+    }
+
+    spindown->disks = newDiskSet;
+}
+
+/**
+* Detach from terminal and save the pid file. 
+*/
+void daemonize()
+{
+    /* Our process ID and Session ID */
+    pid_t pid, sid;
+
+    /* Fork off the parent process */
+    pid = fork();
+    if (pid < 0)
+    exit(EXIT_FAILURE);
+
+    /* If we got a good PID, then
+    we can exit the parent process. */
+    if (pid > 0)
+    {
+        //save the pid file
+        ofstream pidFile;
+        pidFile.open(pidPath.data());
+        pidFile << pid;
+        pidFile.close();
+        exit(EXIT_SUCCESS);
+    }
+
+    /* Change the file mode mask */
+    umask(0);
+
+    /* Create a new SID for the child process */
+    sid = setsid();
+    if (sid < 0)
+    exit(EXIT_FAILURE);
+
+    /* Change the current working directory */
+    if ((chdir("/")) < 0)
+    exit(EXIT_FAILURE);
+
+    /* Close out the standard file descriptors */
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
 }
 
 /**

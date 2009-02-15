@@ -38,65 +38,56 @@ using std::string;
 
 class Spindown
 {
-  public:
-    /**
-     * Constructor:
-     * Does some basic checks and initialisations.
-     * 
-     * @param   int     argc
-     * @param   char*[] argv
-     */
-    Spindown(int, char* []);
-    
-    ~Spindown();
+    friend void readConfig(string const &);
 
-    /**
-     * Preforms one cycle.
-     * Updates disk stats and spins the disks down if needed.
-     */
-    int cycle();
-    
-    /**
-     * Writes the current status to the status file.
-     */
-    string getStatusString(bool all=false);
-    
-    /**
-     * Reads the config file and applies all the options.
-     */
-    void readConfig(string const &path);
+    public:
+        /**
+        * Constructor:
+        * Does some basic checks and initialisations.
+        * 
+        * @param   int     argc
+        * @param   char*[] argv
+        */
+        Spindown(int, char* []);
+        
+        ~Spindown();
 
-    /**
-     * Updates the disk stats, but doesn't do anything else.
-     */
-    void updateStats();
+        /**
+        * Preforms one cycle.
+        * Updates disk stats and spins the disks down if needed.
+        */
+        int cycle();
+        
+        /**
+        * Writes the current status to the status file.
+        */
+        string getStatusString(bool all=false);
+        
+        /**
+        * Updates the disk stats, but doesn't do anything else.
+        */
+        void updateStats();
 
-    /**
-     * Wait cycleTime seconds.
-     */
-    void wait();
+        /**
+        * Wait cycleTime seconds.
+        */
+        void wait();
 
-  private:
+    private:
+        /**
+        * Time between two cycles in seconds
+        */
+        unsigned int cycleTime;
+        
+        /**
+        * Path from where the script was started
+        */
+        string runPath;
+        
+        /**
+        * The disks to administer
+        */
+        DiskSet* disks;
 
-    /**
-     * Time between two cycles in seconds
-     */
-    unsigned int cycleTime;
-    
-    /**
-     * Path from where the script was started
-     */
-    string runPath;
-    
-    /**
-     * Put on true if you whant spindown to log with syslog
-     */
-    bool logMessages;
-    
-    /**
-     * The disks to administer
-     */
-    DiskSet* disks;
-
-    void spinDownDisks();
+        void spinDownDisks();
 };
