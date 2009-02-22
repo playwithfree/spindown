@@ -46,7 +46,7 @@ case "$1" in
         fi
 
         killproc -p $PIDFILE $DAEMON -PIPE
-        echo "`status`"
+        status
 
         exit 0
         ;;
