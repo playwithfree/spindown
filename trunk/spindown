@@ -7,56 +7,16 @@ PIDFILE="/var/run/spindownd.pid"
 
 . /lib/lsb/init-functions
 
-# echo's the string and then the amount of spaces needed to fill it till length
-# $1 the string
-# $2 the desired length
-spaces() {
-    declare -i i
-    declare -i diff
-    diff=$2-${#1}
-
-    #at least one space between values
-    if [ $diff -lt 1 ]; then
-        diff=1
-    fi
-
-    #print the string
-    echo -n $1
-
-    #print the remaining spaces
-    i=0
-    while [ $i -lt $diff ]; do
-        echo -n " "
-        i=$i+1
-    done
-}
-
 #prints table with status about the disks
 status() {
     #print the header of the table
-    spaces "name" 15
-    spaces "watched" 15
-    spaces "active" 15
-    spaces "idle-time" 15
-    spaces "spindown-time" 15
-    echo ""
+	printf "%-5s %10s %10s %15s %20s\n" name watched active idle-time spindown-time
 
-    #build the rows with disks
-    declare -i i
-    i=0
-    for line in `cat $STATUSPATH`; do
-        remainder=`expr $i % 5`
-        if [ $remainder -eq 0 -a $i -ne 0 ]; then
-            echo ""
-            spaces $line 15
-        else
-            spaces $line 15
-        fi
+	while read line; do
 
-        i=$i+1
-    done
+		printf "%-5s %10s %10s %15s %20s\n" $line
 
-    echo ""
+	done < $STATUSPATH
 
     exit 0
 }
