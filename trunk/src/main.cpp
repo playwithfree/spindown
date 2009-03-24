@@ -163,10 +163,8 @@ void parseCommandline(int argc, char* argv[] )
         {
             cout << "Usage: spindownd [OPTION]..." << endl
             << "spindownd is a daemon that spinsdown idle disks." << endl << endl
-            << "  -s, --status-file     The path to the file that is used to store the" << endl
-            << "                          status. This file will be updated every cycle," << endl
-            << "                          so it is advised to store it on a ramdisk like" << endl
-            << "                          /dev/shm." << endl
+            << "  -f, --fifo-path      The path to the fifo that is used to communicate the" << endl
+            << "                          status." << endl
             << "  -c, --config-file     Path to the configuration file. The default is" << endl
             << "                          spindown.conf in the current directory." << endl
             << "  -p, --pid-file        Path to the pid-file. The default is" << endl
@@ -181,8 +179,8 @@ void parseCommandline(int argc, char* argv[] )
         else
         {
             //set fifo path
-            if( (arg=="-f"||arg=="--fifo-path") && i+1 < argc )
-                std::cerr << "Fifo is no longer used. Please use -s or --status-file." << endl
+            if( (arg=="-s"||arg=="--status-file") && i+1 < argc )
+                std::cerr << "Statusfile is no longer used. Please use -f or --fifo-path." << endl
                         << "    Please read the help text for more info." << endl;
                 
             if( (arg=="-f"||arg=="--fifo-path"||arg=="-s"||arg=="--status-file") && i+1 < argc )
