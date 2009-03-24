@@ -53,24 +53,33 @@ void readConfig(string const &);
 
 // Global variables: the horror!
 Spindown* spindown;
-string statusPath;
+string fifoPath;
 string confPath;
 string pidPath;
 
 int main( int argc, char* argv[] )
 {
-    statusPath = relToAbs("./spindown.status");
+    fifoPath = relToAbs("./spindown.fifo");
     confPath = relToAbs("./spindown.conf");
     pidPath = relToAbs("./spindownd.pid");
-    
+
+    // First create spindown object, because it can be
+    // configured in parseCommandline.
     spindown = new Spindown( argc, argv );
     
+    // Configure daemon and paths
     parseCommandline(argc, argv);
-    readConfig(confPath);
     
+    // Read the configuration file.
+    readConfig(confPath);
+
+    // Create the fifo
+    mkfifo( fifoPath.data(), 0744 );
+    
+    // Install signalhandlers
     installSignals();
     
-    //notify about being started
+    // Notify about being started
     Log::get()->message( LOG_INFO, "spindown started" );
     
     while( true )
@@ -102,9 +111,9 @@ void sigHandler(int signalNumber)
             break;
             
         case SIGPIPE: {
-            spindown->updateStats();
             ofstream status;
-            status.open(statusPath.data());
+            spindown->updateStats();
+            status.open(fifoPath.data());
             status << spindown->getStatusString();
             status.close();
             } break;
@@ -112,7 +121,7 @@ void sigHandler(int signalNumber)
         case SIGINT:
         case SIGTERM:
             delete spindown;
-            remove(statusPath.data());
+            remove(fifoPath.data());
             remove(pidPath.data());
             Log::get()->message(LOG_INFO, "spindown stopped");
             exit(EXIT_SUCCESS);
@@ -177,7 +186,7 @@ void parseCommandline(int argc, char* argv[] )
                         << "    Please read the help text for more info." << endl;
                 
             if( (arg=="-f"||arg=="--fifo-path"||arg=="-s"||arg=="--status-file") && i+1 < argc )
-                statusPath = relToAbs(argv[++i]);
+                fifoPath = relToAbs(argv[++i]);
 
             //set config file path
             else if( (arg=="-c" || arg=="--config-file") && i+1 < argc )

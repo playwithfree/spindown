@@ -1,3 +1,12 @@
+Spindown v0.3.1:
+24-03-2009:
+  * Previous changelog was wrong: "The status file is now only updated when the daemon receives
+    the SIGPOLL." Should have been "... daemon receives the SIGPIPE signal.
+  * Fixed Issue 4: Spindown status not showing 80% of time.
+      Happend when spindownd wasn't ready with writing to the status file when cat was already
+      reading from it. Fixed by reverting back to the fifo.
+  * Added a directory to /var/run to keep the 2 files in spindown uses.
+
 Spindown v0.3.0:
 15-02-2009:
   * Moved the code that reads the configuration file out of spindown and into main.
