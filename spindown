@@ -1,9 +1,10 @@
 #!/bin/bash
 
 DAEMON="/sbin/spindownd"
-STATUSPATH="/dev/shm/spindown.status"
 CONFPATH="/etc/spindown.conf"
-PIDFILE="/var/run/spindownd.pid"
+VARDIR="/var/run/spindown"
+STATUSPATH=$VARDIR"/spindownd.fifo"
+PIDFILE=$VARDIR"/spindownd.pid"
 
 . /lib/lsb/init-functions
 
@@ -24,6 +25,7 @@ status() {
 case "$1" in
     "start")
         log_daemon_msg "Starting disk spindown daemon" "spindownd"
+	mkdir $VARDIR
         start_daemon -p $PIDFILE $DAEMON -d -s $STATUSPATH -c $CONFPATH -p $PIDFILE
         log_end_msg $?
 
