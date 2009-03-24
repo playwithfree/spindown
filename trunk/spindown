@@ -3,7 +3,7 @@
 DAEMON="/sbin/spindownd"
 CONFPATH="/etc/spindown.conf"
 VARDIR="/var/run/spindown"
-STATUSPATH=$VARDIR"/spindownd.fifo"
+FIFOPATH =$VARDIR"/spindownd.fifo"
 PIDFILE=$VARDIR"/spindownd.pid"
 
 . /lib/lsb/init-functions
@@ -17,7 +17,7 @@ status() {
 
 		printf "%-5s %10s %10s %15s %20s\n" $line
 
-	done < $STATUSPATH
+	done < $FIFOPATH 
 
     exit 0
 }
@@ -26,7 +26,7 @@ case "$1" in
     "start")
         log_daemon_msg "Starting disk spindown daemon" "spindownd"
 	mkdir -p $VARDIR
-        start_daemon -p $PIDFILE $DAEMON -d -s $STATUSPATH -c $CONFPATH -f $PIDFILE
+        start_daemon -p $PIDFILE $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
         log_end_msg $?
 
         exit $?
