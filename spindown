@@ -3,7 +3,7 @@
 DAEMON="/sbin/spindownd"
 CONFPATH="/etc/spindown.conf"
 VARDIR="/var/run/spindown"
-FIFOPATH =$VARDIR"/spindownd.fifo"
+FIFOPATH=$VARDIR"/spindownd.fifo"
 PIDFILE=$VARDIR"/spindownd.pid"
 
 . /lib/lsb/init-functions
