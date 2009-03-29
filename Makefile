@@ -1,6 +1,6 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
-VERSION = 0.3.0
+VERSION = 0.3.1
 OBJS = main.o diskset.o disk.o spindown.o iniparser.o dictionary.o log.o
 CC = g++
 CFLAGS =-O1 -pthread
@@ -43,6 +43,16 @@ uninstall:
 		$(etcdir)/rc1.d/K20spindown $(etcdir)/rc2.d/S20spindown $(etcdir)/rc3.d/S20spindown\
 		$(etcdir)/rc4.d/S20spindown $(etcdir)/rc5.d/S20spindown $(etcdir)/rc6.d/K20spindown
 
+src:
+	srcdir = spindown-$(VERSION)
+	mkdir -p $(srcdir)/src/ininiparser3.0b
+	cp $(SRC)general.h $(SRC)main.cpp $(SRC)diskset.h $(SRC)diskset.cpp $(SRC)disk.h\
+		$(SRC)disk.cpp $(SRC)spindown.h $(SRC)spindown.cpp $(SRC)log.h $(SRC)log.cpp $(srcdir)/$(SRC)
+	cp $(INPARSER)iniparser.c $(INPARSER)dictionary.c $(srcdir)/$(INPARSER)
+	cp CHANGELOG README COPYING TODO spindown spindown.conf.example $(srcdir)
+	tar -czf $(srcdir).tar.gz -C $(srcdir) .
+	rm -d -r -f $(srcdir)
+
 dist:
 	DESTDIR=spindown-$(VERSION) make install
 	tar -czf spindown-$(VERSION).tar.gz -C spindown-$(VERSION) .
@@ -51,23 +61,23 @@ dist:
 spindownd: $(OBJS)
 	g++ $(CFLAGS) -o spindownd $(OBJS)
 
-main.o: $(SRC)main.cpp
+main.o: $(SRC)main.cpp $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)main.cpp
 
-diskset.o: $(SRC)diskset.cpp
+diskset.o: $(SRC)diskset.cpp $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)diskset.cpp
 
-disk.o: $(SRC)disk.cpp
+disk.o: $(SRC)disk.cpp $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)disk.cpp
 
-spindown.o: $(SRC)spindown.cpp
+spindown.o: $(SRC)spindown.cpp $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)spindown.cpp
+
+log.o: $(SRC)log.cpp $(SRC)general.h
+	g++ $(CFLAGS) -c $(SRC)log.cpp
 
 iniparser.o: $(INPARSER)iniparser.c
 	g++ $(CFLAGS) -c $(INPARSER)iniparser.c
 
 dictionary.o: $(INPARSER)dictionary.c
 	g++ $(CFLAGS) -c $(INPARSER)dictionary.c
-
-log.o: $(SRC)log.cpp
-	g++ $(CFLAGS) -c $(SRC)log.cpp
