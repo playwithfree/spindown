@@ -105,7 +105,8 @@ void Disk::updateStats( string input )
   devNameInp.resize( 32 );
 
   //scan the input for the information we need
-  sscanf( input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
+  //sscanf( input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
+  sscanf( input.data(), "%*u %*u %s %u %*u %*u %*u %u %*u %*u", devNameInp.data(), &newRead, &newWritten );
 
   //We first need to remove all the null characters from the string
   devNameInp.resize( devNameInp.find_first_of((char)0) );
@@ -164,9 +165,10 @@ bool Disk::spindown()
 {
     if (devName!= "" && spinDown)
     {
+	int ret;
         string cmd = command + " /dev/" + devName;
 
-        if(int ret=system(cmd.data()) == 0)
+	if(!(ret=system(cmd.data())))
         {
             string message = devName + " is now inactive.";
             Log::get()->message( LOG_INFO, message );
