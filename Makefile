@@ -6,6 +6,7 @@ CC = g++
 CFLAGS =-O1 -pthread
 SRC = src/
 INPARSER = $(SRC)ininiparser3.0b/
+srcdir = spindown-$(VERSION)
 
 all: spindownd
 	@echo "---"
@@ -43,13 +44,12 @@ uninstall:
 		$(etcdir)/rc1.d/K20spindown $(etcdir)/rc2.d/S20spindown $(etcdir)/rc3.d/S20spindown\
 		$(etcdir)/rc4.d/S20spindown $(etcdir)/rc5.d/S20spindown $(etcdir)/rc6.d/K20spindown
 
-src:
-	srcdir = spindown-$(VERSION)
+tarball:
 	mkdir -p $(srcdir)/src/ininiparser3.0b
 	cp $(SRC)general.h $(SRC)main.cpp $(SRC)diskset.h $(SRC)diskset.cpp $(SRC)disk.h\
 		$(SRC)disk.cpp $(SRC)spindown.h $(SRC)spindown.cpp $(SRC)log.h $(SRC)log.cpp $(srcdir)/$(SRC)
 	cp $(INPARSER)iniparser.c $(INPARSER)dictionary.c $(srcdir)/$(INPARSER)
-	cp CHANGELOG README COPYING TODO spindown spindown.conf.example $(srcdir)
+	cp CHANGELOG README COPYING TODO spindown spindown.conf.example Makefile $(srcdir)
 	tar -czf $(srcdir).tar.gz -C $(srcdir) .
 	rm -d -r -f $(srcdir)
 
