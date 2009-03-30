@@ -3,7 +3,7 @@ etcdir = $(DESTDIR)/etc
 VERSION = 0.3.1
 OBJS = main.o diskset.o disk.o spindown.o iniparser.o dictionary.o log.o
 CC = g++
-CFLAGS =-O1 -pthread
+CFLAGS =-O1
 SRC = src/
 INPARSER = $(SRC)ininiparser3.0b/
 srcdir = spindown-$(VERSION)
@@ -44,19 +44,17 @@ uninstall:
 		$(etcdir)/rc1.d/K20spindown $(etcdir)/rc2.d/S20spindown $(etcdir)/rc3.d/S20spindown\
 		$(etcdir)/rc4.d/S20spindown $(etcdir)/rc5.d/S20spindown $(etcdir)/rc6.d/K20spindown
 
-tarball:
+dist:
 	mkdir -p $(srcdir)/src/ininiparser3.0b
+	mkdir -p $(srcdir)/gentoo
 	cp $(SRC)general.h $(SRC)main.cpp $(SRC)diskset.h $(SRC)diskset.cpp $(SRC)disk.h\
 		$(SRC)disk.cpp $(SRC)spindown.h $(SRC)spindown.cpp $(SRC)log.h $(SRC)log.cpp $(srcdir)/$(SRC)
-	cp $(INPARSER)iniparser.c $(INPARSER)dictionary.c $(srcdir)/$(INPARSER)
+	cp $(INPARSER)iniparser.c $(INPARSER)dictionary.c $(INPARSER)iniparser.h $(INPARSER)dictionary.h\
+		$(srcdir)/$(INPARSER)
+	cp gentoo/README gentoo/rc.spindown gentoo/init.spindown $(srcdir)/gentoo
 	cp CHANGELOG README COPYING TODO spindown spindown.conf.example Makefile $(srcdir)
-	tar -czf $(srcdir).tar.gz -C $(srcdir) .
+	tar -czf $(srcdir).tar.gz $(srcdir)/*
 	rm -d -r -f $(srcdir)
-
-dist:
-	DESTDIR=spindown-$(VERSION) make install
-	tar -czf spindown-$(VERSION).tar.gz -C spindown-$(VERSION) .
-	rm -d -r -f spindown-$(VERSION)
 
 spindownd: $(OBJS)
 	g++ $(CFLAGS) -o spindownd $(OBJS)
