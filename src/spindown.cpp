@@ -58,7 +58,7 @@ void Spindown::wait()
     sleep( cycleTime );
 }
 
-void Spindown::updateDevNames()
+void Spindown::updateDevNames(DiskSet* set)
 {
   //dir pointer
   DIR *dp;
@@ -69,11 +69,16 @@ void Spindown::updateDevNames()
   {
     while (ep = readdir (dp))
     {
-      for( int i=0 ; i < disks->size() ; i++ )
-        disks->at(i)->findDevName(ep->d_name);
+      for( int i=0 ; i < set->size() ; i++ )
+        set->at(i)->findDevName(ep->d_name);
     }
     (void) closedir (dp);
   }
+}
+
+void Spindown::updateDevNames()
+{
+    updateDevNames(disks);
 }
 
 void Spindown::updateDiskStats()

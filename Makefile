@@ -62,16 +62,16 @@ spindownd: $(OBJS)
 main.o: $(SRC)main.cpp $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)main.cpp
 
-diskset.o: $(SRC)diskset.cpp $(SRC)general.h
+diskset.o: $(SRC)diskset.cpp $(SRC)diskset.h $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)diskset.cpp
 
-disk.o: $(SRC)disk.cpp $(SRC)general.h
+disk.o: $(SRC)disk.cpp $(SRC)disk.h $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)disk.cpp
 
-spindown.o: $(SRC)spindown.cpp $(SRC)general.h
+spindown.o: $(SRC)spindown.cpp $(SRC)spindown.h $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)spindown.cpp
 
-log.o: $(SRC)log.cpp $(SRC)general.h
+log.o: $(SRC)log.cpp $(SRC)log.h $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)log.cpp
 
 iniparser.o: $(INPARSER)iniparser.c

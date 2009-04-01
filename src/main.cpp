@@ -214,7 +214,7 @@ void readConfig(string const &path)
     dictionary* ini;
     string section;
     string input;
-    DiskSet* newDiskSet;
+    DiskSet* newDiskSet, oldDiskSet;
     int commonSpinDownTime = 7200;
 
     //try to open the configuration file
@@ -270,8 +270,8 @@ void readConfig(string const &path)
     // to the new configuration and delete the old one
     if (spindown->disks)
     {
-        newDiskSet->updateDevNames();
-        spindown->disks->updateDevNames();
+        Spindown::updateDevNames(newDiskSet);
+        spindown->updateDevNames();
         newDiskSet->setStatsFrom(*spindown->disks);
         delete spindown->disks;
     }
