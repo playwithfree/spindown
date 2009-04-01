@@ -67,11 +67,17 @@ class Spindown
         * Updates the disk stats.
         */
         void updateDiskStats();
-	
-	/**
-	 * Update the device names so they correspond with the device id's.
-	 */
-	void updateDevNames();
+
+        /**
+         * Update the device names so they correspond with the device id's.
+         */
+        static void updateDevNames(DiskSet*);
+
+        /**
+         * Overload function, calls updateDevNames with the DiskSet of the
+         * current object.
+         */
+        void updateDevNames();
 
         /**
         * Wait cycleTime seconds.
