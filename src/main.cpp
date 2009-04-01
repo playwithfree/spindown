@@ -65,7 +65,7 @@ int main( int argc, char* argv[] )
 
     // First create spindown object, because it can be
     // configured in parseCommandline.
-    spindown = new Spindown( argc, argv );
+    spindown = new Spindown();
     
     // Configure daemon and paths
     parseCommandline(argc, argv);
@@ -112,7 +112,7 @@ void sigHandler(int signalNumber)
             
         case SIGPIPE: {
             ofstream status;
-            spindown->updateStats();
+            spindown->updateDiskStats();
             status.open(fifoPath.data());
             status << spindown->getStatusString();
             status.close();

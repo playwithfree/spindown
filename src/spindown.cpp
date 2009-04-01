@@ -28,6 +28,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <fstream>
 
 using std::string;
 using std::ios;
@@ -35,6 +36,7 @@ using std::cout;
 using std::cerr;
 using std::endl;
 using std::ostringstream;
+using std::ifstream;
 
 #include <unistd.h>
 #include <dirent.h>
@@ -43,7 +45,7 @@ using std::ostringstream;
 #include <sys/stat.h>
 #include <sys/types.h>
 
-Spindown::Spindown( int argc, char* argv[] )
+Spindown::Spindown()
 {
     disks = 0;
     cycleTime = 60;
@@ -56,15 +58,44 @@ void Spindown::wait()
     sleep( cycleTime );
 }
 
-void Spindown::updateStats()
+void Spindown::updateDevNames()
 {
-    disks->updateDiskstats();
+  //dir pointer
+  DIR *dp;
+  //structure containing file data
+  struct dirent *ep;
+  
+  if ( (dp = opendir (DEVID_PATH)) != NULL)
+  {
+    while (ep = readdir (dp))
+    {
+      for( int i=0 ; i < disks->size() ; i++ )
+        disks->at(i)->findDevName(ep->d_name);
+    }
+    (void) closedir (dp);
+  }
+}
+
+void Spindown::updateDiskStats()
+{
+  ifstream fin(STATS_PATH, ios::in);
+  char str[CHAR_BUF];
+
+  if( fin )
+  {
+    while( fin.getline(str,CHAR_BUF) )
+    {
+      for( int i=0 ; i < disks->size() ; i++ )
+	disks->at(i)->updateStats(str);
+    }
+    fin.close();
+  }
 }
 
 int Spindown::cycle()
 {
-    disks->updateDevNames();
-    disks->updateDiskstats();
+    updateDevNames();
+    updateDiskStats();
     spinDownDisks();
 }
 

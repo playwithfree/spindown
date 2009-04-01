@@ -107,40 +107,6 @@ Disk* DiskSet::find(Disk const & disk)
   return found;
 }
 
-void DiskSet::updateDevNames()
-{
-  //dir pointer
-  DIR *dp;
-  //structure containing file data
-  struct dirent *ep;
-  
-  if ( (dp = opendir (DEVID_PATH)) != NULL)
-  {
-    while (ep = readdir (dp))
-    {
-      for( int i=0 ; i < this->size() ; i++ )
-        this->at(i)->findDevName(ep->d_name);
-    }
-    (void) closedir (dp);
-  }
-}
-
-void DiskSet::updateDiskstats()
-{
-  ifstream fin(STATS_PATH, ios::in);
-  char str[CHAR_BUF];
-
-  if( fin )
-  {
-    while( fin.getline(str,CHAR_BUF) )
-    {
-      for( int i=0 ; i < this->size() ; i++ )
-        this->at(i)->updateStats(str);
-    }
-    fin.close();
-  }
-}
-
 int DiskSet::countEntries(Disk const & search)  const
 {
   int count = 0;
