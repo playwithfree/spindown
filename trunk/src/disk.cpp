@@ -105,8 +105,7 @@ void Disk::updateStats( string input )
   devNameInp.resize( 32 );
 
   //scan the input for the information we need
-  //sscanf( input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
-  sscanf( input.data(), "%*u %*u %s %u %*u %*u %*u %u %*u %*u", devNameInp.data(), &newRead, &newWritten );
+  sscanf( input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
 
   //We first need to remove all the null characters from the string
   devNameInp.resize( devNameInp.find_first_of((char)0) );

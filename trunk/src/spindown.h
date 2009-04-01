@@ -48,7 +48,7 @@ class Spindown
         * @param   int     argc
         * @param   char*[] argv
         */
-        Spindown(int, char* []);
+        Spindown();
         
         ~Spindown();
 
@@ -64,9 +64,14 @@ class Spindown
         string getStatusString(bool all=false);
         
         /**
-        * Updates the disk stats, but doesn't do anything else.
+        * Updates the disk stats.
         */
-        void updateStats();
+        void updateDiskStats();
+	
+	/**
+	 * Update the device names so they correspond with the device id's.
+	 */
+	void updateDevNames();
 
         /**
         * Wait cycleTime seconds.

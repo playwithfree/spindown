@@ -53,18 +53,6 @@ class DiskSet : public vector<Disk*>
     ~DiskSet();
 
     /**
-     * Reads all the files in /dev/disk/by-id and passes theses results
-     * to the disks.
-     */
-    void updateDevNames();
-
-    /**
-     * Reads the file /proc/diskstats and passes this line by line to
-     * every disk.
-     */
-    void updateDiskstats();
-
-    /**
      * Sets the common spindown time
      *
      * @param unsigned int sgTime The new spindown time
