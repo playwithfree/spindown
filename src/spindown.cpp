@@ -93,6 +93,11 @@ void Spindown::updateDiskStats()
 
     if(fin)
     {
+        // Assume all disk are no longer in the system. They will be marked
+        // as present when their stats are updated.
+        for(i=0 ; i < disks->size() ; i++)
+            disks->at(i)->resetPresent();
+
         while( fin.getline(str,CHAR_BUF) )
         {
             for(i=0 ; i < disks->size() ; i++)
@@ -116,7 +121,11 @@ void Spindown::updateDiskStats()
         fin.close();
     }
     else
-         Log::get()->message(LOG_INFO, "Can not open stats file for"+disks->at(i)->getName());
+    {
+        string msg("Can't open file: ");
+        msg += STATS_PATH;
+        Log::get()->message(LOG_INFO, msg);
+    }
 }
 
 int Spindown::cycle()
@@ -163,7 +172,7 @@ string Spindown::getStatusString( bool all )
     {
         Disk* disk = disks->at(i);
 
-        if (all || (disks->countEntries(*disk) == 1 && disk->getName()!=""))
+        if (all || (disks->countEntries(*disk) == 1 && disk->isPresent()))
         {
             status << (disk->getName()=="" ? "none" : disk->getName()) << " "
                 << disk->isWatched() << " "

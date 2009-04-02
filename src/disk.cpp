@@ -83,6 +83,7 @@ Disk::Disk( string id, string name, bool sd, string cmd, int sdTime )
 
   active = true;
   spinDown = sd;
+  present = false;
 }
 
 Disk::~Disk()
@@ -96,11 +97,12 @@ void Disk::updateStats(unsigned long int newBlocks)
         totalBlocks = 0;
         return;
     }
+
+    // If we meet the disk here we'll asume it is present in the system.
+    present = true;
     
-    /*
-        The values from /proc/diskstats can overflow because they are 32-bit integers.
-        But because we are only looking for changes we don't have to detect it.
-    */
+    // The values from /proc/diskstats can overflow because they are 32-bit integers.
+    // But because we are only looking for changes we don't have to detect it.
     if( newBlocks != totalBlocks )
     {
         //if the disk was not active, but now is, log a message
@@ -114,60 +116,16 @@ void Disk::updateStats(unsigned long int newBlocks)
     totalBlocks = newBlocks;
 }
 
-void Disk::updateStats( string input )
-{
-  if( devName == "" )
-  {
-    totalBlocks = 0;
-    return;
-  }
-
-  string devNameInp;  //the name of the device read from the configuration
-  unsigned int newRead;
-  unsigned int newWritten;
-
-  //Make a string with a size of 32
-  devNameInp.resize( 32 );
-
-  //scan the input for the information we need
-  sscanf( input.data(), "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
-
-  //We first need to remove all the null characters from the string
-  devNameInp.resize( devNameInp.find_first_of((char)0) );
-
-  //are we on the line of the right device?
-  if( devNameInp == devName )
-  {
-    /*
-      The values from /proc/diskstats can overflow because they are 32-bit integers.
-      But because we are only looking for changes we don't have to detect it.
-    */
-    if( newRead + newWritten != totalBlocks )
-    {
-        //if the disk was not active log a message
-        if( !active )
-        {
-            string message = devName + " is now active.";
-
-            Log::get()->message( LOG_INFO, message );
-        }
-
-        lastActive = time(NULL);
-        active = true;
-    }
-
-    totalBlocks = newRead + newWritten;
-  }
-}
-
 void Disk::findDevName( string dev )
 {
   //no need to do this when the id is empty, this means this is a nonswapable disk
   if( devId == "" )
     return;
+
   //we use . to reset the device name
   else if( dev == "." )
     devName = "";
+
   //do the normal thing
   else if( dev == devId )
   {
@@ -225,9 +183,25 @@ bool Disk::isActive() const
   return active;
 }
 
+bool Disk::isPresent() const
+{
+    if(devName!="" && present)
+        return true;
+    else
+        return false;
+}
+
+void Disk::resetPresent()
+{
+    present = false;
+}
+
 unsigned int Disk::idleTime() const
 {
-  return (unsigned int)difftime( time(NULL), lastActive );
+    if(isPresent())
+        return (unsigned int)difftime( time(NULL), lastActive );
+    else
+        return 0;
 }
 
 unsigned int Disk::spinDownTime() const

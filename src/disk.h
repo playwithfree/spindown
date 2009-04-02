@@ -95,17 +95,14 @@ class Disk
      */
     void findDevName( string dev );
     
+    /**
+     * Update the stats.
+     * This function also marks a disk as present when it's stats get updated.
+     *
+     * @param       unsigned long int   the total amount of activity
+     */
     void updateStats(unsigned long int);
     
-    /**
-     * Update the values
-     * This function only needs a line from diskstats and then
-     * only uses the information it needs
-     *
-     * @param       char*   input   a char array containing a line from diskstats
-     */
-    void updateStats( string input );
-
     /**
      * Returns the id of the device as in /dev/disk/by-id
      *
@@ -124,6 +121,16 @@ class Disk
      * Returns true if the disk is watched
      */
     bool isWatched() const;
+
+    /**
+     * Returns true if the disk is in the system
+     */
+    bool isPresent() const;
+
+    /**
+     * Resets present to false
+     */
+    void resetPresent();
 
     /**
      * Returns true as long as the disk is active
@@ -180,6 +187,11 @@ class Disk
      * The name of the device sda sdb hda
      */
     string devName;
+
+    /**
+     * Set to true if this disk is present in the system.
+     */
+    bool present;
 
     /**
      * The command to execute
