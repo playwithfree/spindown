@@ -61,10 +61,16 @@ class Spindown
         /**
         * Writes the current status to the status file.
         */
-        string getStatusString(bool all=false);
+        string getStatusString(bool all=false) const;
         
         /**
-        * Updates the disk stats.
+         * Updates the disk stats.
+         */
+        static void updateDiskStats(DiskSet*);
+
+        /**
+         * Overload function, calls updateDiskStats with the DiskSet of the
+         * current object.
         */
         void updateDiskStats();
 
@@ -82,7 +88,7 @@ class Spindown
         /**
         * Wait cycleTime seconds.
         */
-        void wait();
+        void wait() const;
 
     private:
         /**

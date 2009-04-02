@@ -118,39 +118,39 @@ void Disk::updateStats(unsigned long int newBlocks)
 
 void Disk::findDevName( string dev )
 {
-  //no need to do this when the id is empty, this means this is a nonswapable disk
-  if( devId == "" )
-    return;
+    //no need to do this when the id is empty, this means this is a nonswapable disk
+    if( devId == "" )
+        return;
 
-  //we use . to reset the device name
-  else if( dev == "." )
-    devName = "";
+    //we use . to reset the device name
+    else if( dev == "." )
+        devName = "";
 
-  //do the normal thing
-  else if( dev == devId )
-  {
-    string buffer;
-    buffer.resize( CHAR_BUF );
+    //do the normal thing
+    else if( dev == devId )
+    {
+        string buffer;
+        buffer.resize( CHAR_BUF );
 
-    //the path to the device
-    dev = DEVID_PATH + dev;
-    //read target of the link
-    readlink( (char*)dev.data(), (char*)buffer.data(), CHAR_BUF);
-    //remove empty characters
-    buffer.resize( buffer.find_first_of((char)0) );
-    //remove ../../ from the link target
-    devName = buffer.substr(buffer.find_last_of("/")+1,buffer.size()-buffer.find_last_of("/") );
-  }
+        //the path to the device
+        dev = DEVID_PATH + dev;
+        //read target of the link
+        readlink( (char*)dev.data(), (char*)buffer.data(), CHAR_BUF);
+        //remove empty characters
+        buffer.resize( buffer.find_first_of((char)0) );
+        //remove ../../ from the link target
+        devName = buffer.substr(buffer.find_last_of("/")+1,buffer.size()-buffer.find_last_of("/") );
+    }
 }
 
 bool Disk::spindown()
 {
-    if (devName!= "" && spinDown)
+    if (isPresent() && spinDown)
     {
-	int ret;
+        int ret;
         string cmd = command + " /dev/" + devName;
 
-	if(!(ret=system(cmd.data())))
+        if(!(ret=system(cmd.data())))
         {
             string message = devName + " is now inactive.";
             Log::get()->message( LOG_INFO, message );
@@ -206,13 +206,13 @@ unsigned int Disk::idleTime() const
 
 unsigned int Disk::spinDownTime() const
 {
-  return localSpinDownTime;
+    return localSpinDownTime;
 }
 
 void Disk::setStatsFrom(Disk const & disk)
 {
-  // only copy the internal status, don't touch configuration!
-  lastActive        = disk.lastActive;
-  active            = disk.active;
-  spinDown          = disk.spinDown;
+    // only copy the internal status, don't touch configuration!
+    lastActive  = disk.lastActive;
+    active      = disk.active;
+    totalBlocks = disk.totalBlocks;
 }

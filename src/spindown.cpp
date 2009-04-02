@@ -54,7 +54,7 @@ Spindown::Spindown()
 
 Spindown::~Spindown(){};
 
-void Spindown::wait()
+void Spindown::wait() const
 {
     sleep( cycleTime );
 }
@@ -82,7 +82,7 @@ void Spindown::updateDevNames()
     updateDevNames(disks);
 }
 
-void Spindown::updateDiskStats()
+void Spindown::updateDiskStats(DiskSet* disks)
 {
     ifstream fin(STATS_PATH, ios::in);
     string devNameInp;  //the name of the device read from the configuration
@@ -100,24 +100,27 @@ void Spindown::updateDiskStats()
 
         while( fin.getline(str,CHAR_BUF) )
         {
+            // Clear the device name and give it a length of 32
+            devNameInp = "";
+            devNameInp.resize( 32 );
+
+            // Scan the input for the information we need
+            sscanf( str, "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
+
+            // We first need to remove all the null characters from the string
+            devNameInp.resize( devNameInp.find_first_of((char)0 ) );
+
+            // Find the disk and update the stats
             for(i=0 ; i < disks->size() ; i++)
             {
-                devNameInp = "";
-
-                //Make a string with a size of 32
-                devNameInp.resize( 32 );
-
-                //scan the input for the information we need
-                sscanf( str, "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
-
-                //We first need to remove all the null characters from the string
-                devNameInp.resize( devNameInp.find_first_of((char)0 ) );
-
-                //are we on the line of the right device?
                 if(devNameInp == disks->at(i)->getName())
+                {
                     disks->at(i)->updateStats(newRead + newWritten);
+                    break;
+                }
             }
         }
+
         fin.close();
     }
     else
@@ -126,6 +129,11 @@ void Spindown::updateDiskStats()
         msg += STATS_PATH;
         Log::get()->message(LOG_INFO, msg);
     }
+}
+
+void Spindown::updateDiskStats()
+{
+    updateDiskStats(disks);
 }
 
 int Spindown::cycle()
@@ -164,7 +172,7 @@ void Spindown::spinDownDisks()
     }
 }
 
-string Spindown::getStatusString( bool all )
+string Spindown::getStatusString( bool all ) const
 {
     ostringstream status;
 
