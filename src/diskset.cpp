@@ -64,7 +64,6 @@ DiskSet::~DiskSet()
 
 void DiskSet::setStatsFrom(DiskSet const & set)
 {
-
   for( int i=0 ; i < set.size() ; i++ )
   {
     if (!set[i])
