@@ -11,13 +11,13 @@ PIDFILE=$VARDIR"/spindownd.pid"
 #prints table with status about the disks
 status() {
     #print the header of the table
-	printf "%-5s %10s %10s %15s %20s\n" name watched active idle-time spindown-time
+    printf "%-5s %10s %10s %15s %20s\n" name watched active idle-time spindown-time
 
-	while read line; do
+    while read line; do
 
-		printf "%-5s %10s %10s %15s %20s\n" $line
+            printf "%-5s %10s %10s %15s %20s\n" $line
 
-	done < $FIFOPATH 
+    done < $FIFOPATH 
 
     exit 0
 }
@@ -25,7 +25,7 @@ status() {
 case "$1" in
     "start")
         log_daemon_msg "Starting disk spindown daemon" "spindownd"
-	mkdir $VARDIR &> /dev/null
+        mkdir $VARDIR &> /dev/null
         start_daemon -p $PIDFILE $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
         log_end_msg $?
 
@@ -35,7 +35,7 @@ case "$1" in
     "stop")
         log_daemon_msg "Stopping disk spindown daemon" "spindownd"
         killproc -p $PIDFILE $DAEMON
-	rmdir $VARDIR &> /dev/null
+        rmdir $VARDIR &> /dev/null
         log_end_msg $?
 
         exit $?

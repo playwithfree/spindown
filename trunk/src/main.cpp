@@ -81,7 +81,7 @@ int main( int argc, char* argv[] )
     installSignals();
     
     // Notify about being started
-    Log::get()->message( LOG_INFO, "spindown started" );
+    Log::get()->message( LOG_INFO, "Daemon started." );
     
     while( true )
     {        
