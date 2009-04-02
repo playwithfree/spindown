@@ -26,6 +26,7 @@
 
 #include <signal.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include <iostream>
 #include <fstream>
@@ -111,11 +112,24 @@ void sigHandler(int signalNumber)
             break;
             
         case SIGPIPE: {
-            ofstream status;
-            spindown->updateDiskStats();
-            status.open(fifoPath.data());
-            status << spindown->getStatusString();
-            status.close();
+            // We need to make sure that there is a process that has the fifo
+            // open for reading else the whole daemon will lock up. If no program
+            // opens the fifo we'll repport the error and continue.
+            int file = open(fifoPath.data(), O_NONBLOCK | O_WRONLY);
+
+            if(errno==0)
+            {
+                string status;
+
+                status = spindown->getStatusString();
+
+                write (file, status.data(), status.size());
+            }
+            else
+                Log::get()->message(LOG_INFO, "Failed to write to the fifo.");
+
+            close(file);
+
             } break;
 
         case SIGINT:
@@ -123,7 +137,7 @@ void sigHandler(int signalNumber)
             delete spindown;
             remove(fifoPath.data());
             remove(pidPath.data());
-            Log::get()->message(LOG_INFO, "spindown stopped");
+            Log::get()->message(LOG_INFO, "Daemon stopped.");
             exit(EXIT_SUCCESS);
             break;
 

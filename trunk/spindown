@@ -48,8 +48,10 @@ case "$1" in
             exit 1
         fi
 
+        # First open the fifo and then send the signal
+        ( sleep 0.1; status ) &
         killproc -p $PIDFILE $DAEMON -PIPE
-        status
+        wait $!
 
         exit 0
         ;;

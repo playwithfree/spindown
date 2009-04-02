@@ -2,6 +2,8 @@ Spindown v0.3.1:
 02-04-2009:
   * Fixed a bug that let spindown display the stats of disks that were not present in the
     system when they were defined in the configuration file with there device name.
+  * Fixed another bug that could let spindown hang when SIGPIPE is send but the fifo is never
+    opend.
 
 24-03-2009:
   * Previous changelog was wrong: "The status file is now only updated when the daemon receives
