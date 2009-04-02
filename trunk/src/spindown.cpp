@@ -37,6 +37,7 @@ using std::cerr;
 using std::endl;
 using std::ostringstream;
 using std::ifstream;
+using std::hex;
 
 #include <unistd.h>
 #include <dirent.h>
@@ -83,18 +84,39 @@ void Spindown::updateDevNames()
 
 void Spindown::updateDiskStats()
 {
-  ifstream fin(STATS_PATH, ios::in);
-  char str[CHAR_BUF];
+    ifstream fin(STATS_PATH, ios::in);
+    string devNameInp;  //the name of the device read from the configuration
+    unsigned int newRead, newWritten;
+    unsigned long int blocks;
+    char str[CHAR_BUF];
+    int i;
 
-  if( fin )
-  {
-    while( fin.getline(str,CHAR_BUF) )
+    if(fin)
     {
-      for( int i=0 ; i < disks->size() ; i++ )
-	disks->at(i)->updateStats(str);
+        while( fin.getline(str,CHAR_BUF) )
+        {
+            for(i=0 ; i < disks->size() ; i++)
+            {
+                devNameInp = "";
+
+                //Make a string with a size of 32
+                devNameInp.resize( 32 );
+
+                //scan the input for the information we need
+                sscanf( str, "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
+
+                //We first need to remove all the null characters from the string
+                devNameInp.resize( devNameInp.find_first_of((char)0 ) );
+
+                //are we on the line of the right device?
+                if(devNameInp == disks->at(i)->getName())
+                    disks->at(i)->updateStats(newRead + newWritten);
+            }
+        }
+        fin.close();
     }
-    fin.close();
-  }
+    else
+         Log::get()->message(LOG_INFO, "Can not open stats file for"+disks->at(i)->getName());
 }
 
 int Spindown::cycle()

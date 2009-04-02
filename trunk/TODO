@@ -1,1 +1,2 @@
-nothing
+remove disk that are not present and are watched with devname from list
+clean updatestats code

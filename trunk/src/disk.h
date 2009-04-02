@@ -94,7 +94,9 @@ class Disk
      * @param       string  dev   the name of a link in /dev/disk/by-id
      */
     void findDevName( string dev );
-
+    
+    void updateStats(unsigned long int);
+    
     /**
      * Update the values
      * This function only needs a line from diskstats and then

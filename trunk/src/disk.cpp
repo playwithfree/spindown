@@ -89,6 +89,31 @@ Disk::~Disk()
 {
 }
 
+void Disk::updateStats(unsigned long int newBlocks)
+{
+    if( devName == "" )
+    {
+        totalBlocks = 0;
+        return;
+    }
+    
+    /*
+        The values from /proc/diskstats can overflow because they are 32-bit integers.
+        But because we are only looking for changes we don't have to detect it.
+    */
+    if( newBlocks != totalBlocks )
+    {
+        //if the disk was not active, but now is, log a message
+        if( !active )
+            Log::get()->message( LOG_INFO, devName + " is now active." );
+
+        lastActive = time(NULL);
+        active = true;
+    }
+
+    totalBlocks = newBlocks;
+}
+
 void Disk::updateStats( string input )
 {
   if( devName == "" )
