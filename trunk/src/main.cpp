@@ -111,33 +111,34 @@ void sigHandler(int signalNumber)
             readConfig(confPath);
             break;
             
-        case SIGPIPE: {
-            // We need to make sure that there is a process that has the fifo
-            // open for reading else the whole daemon will lock up. If no program
-            // opens the fifo we'll repport the error and continue.
-            int file = open(fifoPath.data(), O_NONBLOCK | O_WRONLY);
-
-            if(errno==0)
+        case SIGPIPE:
             {
-                string status;
+                // We need to make sure that there is a process that has the fifo
+                // open for reading else the whole daemon will lock up. If no program
+                // opens the fifo we'll repport the error and continue.
+                int file = open(fifoPath.data(), O_NONBLOCK | O_WRONLY);
 
-                status = spindown->getStatusString();
+                if(errno==0)
+                {
+                    string status = spindown->getStatusString();
+                    write (file, status.data(), status.size());
+                }
+                else
+                    Log::get()->message(LOG_INFO, "Failed to write to the fifo.");
 
-                write (file, status.data(), status.size());
+                close(file);
             }
-            else
-                Log::get()->message(LOG_INFO, "Failed to write to the fifo.");
-
-            close(file);
-
-            } break;
+            break;
 
         case SIGINT:
         case SIGTERM:
             delete spindown;
+
             remove(fifoPath.data());
             remove(pidPath.data());
+
             Log::get()->message(LOG_INFO, "Daemon stopped.");
+
             exit(EXIT_SUCCESS);
             break;
 
