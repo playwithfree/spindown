@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #include <iostream>
 #include <fstream>
@@ -63,7 +64,7 @@ int main( int argc, char* argv[] )
     fifoPath = relToAbs("./spindown.fifo");
     confPath = relToAbs("./spindown.conf");
     pidPath = relToAbs("./spindownd.pid");
-
+    
     // First create spindown object, because it can be
     // configured in parseCommandline.
     spindown = new Spindown();
@@ -229,9 +230,25 @@ void readConfig(string const &path)
     dictionary* ini;
     string section;
     string input;
+    struct stat sbuf;
     DiskSet* newDiskSet, oldDiskSet;
     int commonSpinDownTime = 7200;
 
+    stat(confPath.data(), &sbuf);
+
+    if( getgid() != sbuf.st_gid || getuid() != sbuf.st_uid )
+    {
+        std::cerr << "Error: Configuration file is not owned by the same user and/or "
+                << " group that is running the daemon."<< endl;
+        exit (1);
+    }
+    
+    if( (sbuf.st_mode & S_IWOTH) == S_IWOTH )
+    {
+        std::cerr << "Error: Configuration file is writeable by others." << endl;
+        exit(1);
+    }
+    
     //try to open the configuration file
     if( (ini=iniparser_load(path.data()))==NULL )
     {
