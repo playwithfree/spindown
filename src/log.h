@@ -27,10 +27,11 @@
 #ifndef _LOG_H
 #define _LOG_H
 
-#include <string>
-
+// Include here altough it is not needed. It will make all the defines
+// from syslog.h available to every file that includes this one.
 #include <syslog.h>
 
+#include <string>
 using std::string;
 
 class Log

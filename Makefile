@@ -1,7 +1,7 @@
 sbindir = $(DESTDIR)/sbin
 etcdir = $(DESTDIR)/etc
 VERSION = 0.3.1
-OBJS = main.o diskset.o disk.o spindown.o iniparser.o dictionary.o log.o
+OBJS = main.o diskset.o disk.o spindown.o iniparser.o dictionary.o log.o spindownd.o
 CC = g++
 CFLAGS =-O1
 SRC = src/
@@ -48,7 +48,8 @@ dist:
 	mkdir -p $(srcdir)/src/ininiparser3.0b
 	mkdir -p $(srcdir)/gentoo
 	cp $(SRC)general.h $(SRC)main.cpp $(SRC)diskset.h $(SRC)diskset.cpp $(SRC)disk.h\
-		$(SRC)disk.cpp $(SRC)spindown.h $(SRC)spindown.cpp $(SRC)log.h $(SRC)log.cpp $(srcdir)/$(SRC)
+		$(SRC)disk.cpp $(SRC)spindown.h $(SRC)spindown.cpp $(SRC)log.h $(SRC)log.cpp\
+                $(SRC)spindownd.h $(SRC)spindownd.cpp $(srcdir)/$(SRC)
 	cp $(INPARSER)iniparser.c $(INPARSER)dictionary.c $(INPARSER)iniparser.h $(INPARSER)dictionary.h\
 		$(srcdir)/$(INPARSER)
 	cp gentoo/README gentoo/rc.spindown gentoo/init.spindown $(srcdir)/gentoo
@@ -70,6 +71,9 @@ disk.o: $(SRC)disk.cpp $(SRC)disk.h $(SRC)general.h
 
 spindown.o: $(SRC)spindown.cpp $(SRC)spindown.h $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)spindown.cpp
+
+spindownd.o: $(SRC)spindownd.cpp $(SRC)spindownd.h $(SRC)general.h
+	g++ $(CFLAGS) -c $(SRC)spindownd.cpp
 
 log.o: $(SRC)log.cpp $(SRC)log.h $(SRC)general.h
 	g++ $(CFLAGS) -c $(SRC)log.cpp

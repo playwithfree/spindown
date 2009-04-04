@@ -27,18 +27,18 @@
  * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
  */
 
-#include <vector>
-#include <string>
+#ifndef SPINDOWN_CLASS_H
+#define SPINDOWN_CLASS_H
 
-using std::vector;
+#include <string>
 using std::string;
 
-#include "general.h"
-#include "disk.h"
+class Disk;
+class Spindownd;
 
 class Spindown
 {
-    friend void readConfig(string const &);
+    friend class Spindownd;
 
     public:
         /**
@@ -53,14 +53,14 @@ class Spindown
         ~Spindown();
 
         /**
-        * Preforms one cycle.
-        * Updates disk stats and spins the disks down if needed.
-        */
+         * Preforms one cycle.
+         * Updates disk stats and spins the disks down if needed.
+         */
         int cycle();
         
         /**
-        * Writes the current status to the status file.
-        */
+         * Writes the current status to the status file.
+         */
         string getStatusString(bool all=false) const;
         
         /**
@@ -71,7 +71,7 @@ class Spindown
         /**
          * Overload function, calls updateDiskStats with the DiskSet of the
          * current object.
-        */
+         */
         void updateDiskStats();
 
         /**
@@ -86,8 +86,8 @@ class Spindown
         void updateDevNames();
 
         /**
-        * Wait cycleTime seconds.
-        */
+         * Wait cycleTime seconds.
+         */
         void wait() const;
 
     private:
@@ -97,14 +97,16 @@ class Spindown
         unsigned int cycleTime;
         
         /**
-        * Path from where the script was started
-        */
+         * Path from where the script was started
+         */
         string runPath;
         
         /**
-        * The disks to administer
-        */
+         * The disks to administer
+         */
         DiskSet* disks;
 
         void spinDownDisks();
 };
+
+#endif

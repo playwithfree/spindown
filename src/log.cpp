@@ -20,11 +20,11 @@
  * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
  */
 
+#include <syslog.h>
+
 #include <string>
 
 using std::string;
-
-#include <syslog.h>
 
 #include "log.h"
 

@@ -20,10 +20,7 @@
 * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
 */
 
-#include "spindown.h"
-#include "general.h"
-#include "disk.h"
-#include "log.h"
+#include <dirent.h>
 
 #include <string>
 #include <sstream>
@@ -32,19 +29,16 @@
 
 using std::string;
 using std::ios;
-using std::cout;
-using std::cerr;
 using std::endl;
 using std::ostringstream;
 using std::ifstream;
-using std::hex;
 
-#include <unistd.h>
-#include <dirent.h>
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include "general.h"
+#include "disk.h"
+#include "log.h"
+#include "diskset.h"
+
+#include "spindown.h"
 
 Spindown::Spindown()
 {
