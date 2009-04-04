@@ -1,4 +1,8 @@
 Spindown v0.3.1:
+04-04-2009:
+  * Made a class to keep all the extra functions that used to be in main.
+  * Removed includes that weren't used any longer.
+
 03-04-2009:
   * Fixed a security issue that allowed attackers to execute malicious commands as root when the
     configuration file wasn't properly secured.

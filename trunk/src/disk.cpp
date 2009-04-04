@@ -20,10 +20,11 @@
  * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
  */
 
-#include "disk.h"
-#include "general.h"
-#include "log.h"
-#include "ininiparser3.0b/iniparser.h"
+#include <time.h>
+#include <dirent.h>
+#include <stddef.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #include <iostream>
 #include <string>
@@ -34,11 +35,11 @@ using std::string;
 using std::vector;
 using std::ostringstream;
 
-#include <time.h>
-#include <dirent.h>
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "general.h"
+#include "log.h"
+#include "ininiparser3.0b/iniparser.h"
+
+#include "disk.h"
 
 Disk* Disk::create( dictionary& ini, string const & section)
 {

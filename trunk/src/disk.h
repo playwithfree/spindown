@@ -28,24 +28,15 @@
 #ifndef DISC_CLASS_H
 #define DISC_CLASS_H
 
-#include "general.h"
-#include "ininiparser3.0b/dictionary.h"
-#include "diskset.h"
+#include "ininiparser3.0b/iniparser.h"
 
 #include <string>
-#include <vector>
-#include <fstream>
-
-using std::vector;
 using std::string;
-using std::ostream;
-
-#include <ctime>
 
 class Disk
 {
 
-    friend class DiskSet;
+  friend class DiskSet;
 
   public:
 

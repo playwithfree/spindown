@@ -26,12 +26,7 @@
 #ifndef DISKSET_H
 #define DISKSET_H
 
-#include "disk.h"
-
-#include <fstream>
 #include <vector>
-
-using std::ostream;
 using std::vector;
 
 class Disk;

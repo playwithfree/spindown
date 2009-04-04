@@ -19,29 +19,14 @@
  * 
  * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
  */
-
-#include "disk.h"
-#include "diskset.h"
-#include "general.h"
-
-#include <iostream>
 #include <string>
-#include <fstream>
-#include <vector>
-#include <sstream>
 
 using std::string;
-using std::vector;
-using std::ifstream;
-using std::ios;
-using std::ostringstream;
 
-#include <time.h>
-#include <dirent.h>
-#include <unistd.h>
-#include <stddef.h>
-#include <sys/types.h>
-#include <sys/stat.h>
+#include "general.h"
+#include "disk.h"
+
+#include "diskset.h"
 
 DiskSet::DiskSet(unsigned int sgTime) :
   commonSpinDownTime(sgTime)
