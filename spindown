@@ -48,11 +48,11 @@ if ! type status_of_proc &> /dev/null; then
     status_of_proc()
     {
         if [ -a $PIDFILE ]; then
-            echo spindown is running
+            echo spindown is running.
             return 0
 
         else
-            echo spindown is not running
+            echo spindown is not running.
             return 1
 
         fi
@@ -63,7 +63,6 @@ if ! type start_daemon &> /dev/null; then
     start_daemon()
     {
         if [ -a $PIDFILE ]; then
-            echo spindown is already running.
             return 1
 
         else
