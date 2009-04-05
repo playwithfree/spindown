@@ -43,32 +43,29 @@ using std::ifstream;
 Spindown::Spindown()
 {
     disks = 0;
-    cycleTime = 60;
 }
 
-Spindown::~Spindown(){};
-
-void Spindown::wait() const
+Spindown::~Spindown()
 {
-    sleep( cycleTime );
+    delete disks;
 }
 
 void Spindown::updateDevNames(DiskSet* set)
 {
-  //dir pointer
-  DIR *dp;
-  //structure containing file data
-  struct dirent *ep;
-  
-  if ( (dp = opendir (DEVID_PATH)) != NULL)
-  {
-    while (ep = readdir (dp))
+    //dir pointer
+    DIR *dp;
+    //structure containing file data
+    struct dirent *ep;
+
+    if ( (dp = opendir (DEVID_PATH)) != NULL)
     {
-      for( int i=0 ; i < set->size() ; i++ )
-        set->at(i)->findDevName(ep->d_name);
+        while (ep = readdir (dp))
+        {
+            for( int i=0 ; i < set->size() ; i++ )
+                set->at(i)->findDevName(ep->d_name);
+        }
+        (void) closedir (dp);
     }
-    (void) closedir (dp);
-  }
 }
 
 void Spindown::updateDevNames()
@@ -130,18 +127,11 @@ void Spindown::updateDiskStats()
     updateDiskStats(disks);
 }
 
-int Spindown::cycle()
+void Spindown::spinDownIdleDisks()
 {
-    updateDevNames();
-    updateDiskStats();
-    spinDownDisks();
-}
-
-void Spindown::spinDownDisks()
-{
-    //commit buffer cache to disk 
+    // Commit buffer cache to disk
     sync();
-    
+
     for( int i=0 ; i < disks->size() ; i++ )
     {
         Disk* disk = disks->at(i);
@@ -154,12 +144,13 @@ void Spindown::spinDownDisks()
         if (disks->countEntries(*disk) == 1)
         {
             unsigned int sgTime = disk->spinDownTime();
+
             // if no spindown time was configured, use the passed default vaule
             if(sgTime == 0)
                 sgTime = disks->getCommonSpindownTime();
 
-            //Only spindown disks that have been idle long enough, have a correct
-            //devicename and are active
+            // Only spindown disks that have been idle long enough, have a correct
+            // devicename and are active
             if (disk->getName() != "" && disk->idleTime() >= sgTime && disk->isActive() )
                 disk->spindown();
         }

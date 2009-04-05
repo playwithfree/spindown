@@ -57,34 +57,34 @@ Disk* Disk::create( dictionary& ini, string const & section)
 
 Disk::Disk( string id, string name, bool sd, string cmd, int sdTime )
 {
-  //if both names are empty something is wrong
-  if( id == "" && name == "" )
-  {
-    std::cerr << "Error: there is a disk with no name or id in your configurationfile!" << std::endl;
-    exit( 1 );
-  }
+    // If both names are empty something is wrong
+    if( id == "" && name == "" )
+    {
+        std::cerr << "Error: there is a disk with no name or id in your configurationfile!" << std::endl;
+        exit( 1 );
+    }
 
-  //one has to be empty
-  if( id != "" && name != "" )
-  {
-    std::cerr << "Error: there is a disk with both name and id in your configurationfile!" << std::endl
-              << "(Hint: id: " << id << " name: " << name << ")" << std::endl;
-    exit( 1 );
-  }
+    // One has to be empty
+    if( id != "" && name != "" )
+    {
+        std::cerr << "Error: there is a disk with both name and id in your configurationfile!" << std::endl
+                << "(Hint: id: " << id << " name: " << name << ")" << std::endl;
+        exit( 1 );
+    }
 
-  devId = id;
-  devName = name;
-  localSpinDownTime = sdTime < 0 ? 0 : sdTime;
+    devId = id;
+    devName = name;
+    localSpinDownTime = sdTime < 0 ? 0 : sdTime;
 
-  totalBlocks = 0;
+    totalBlocks = 0;
 
-  command = cmd;
+    command = cmd;
 
-  lastActive = time(NULL);
+    lastActive = time(NULL);
 
-  active = true;
-  spinDown = sd;
-  present = false;
+    active = true;
+    spinDown = sd;
+    present = false;
 }
 
 Disk::~Disk()

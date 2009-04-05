@@ -6,10 +6,69 @@ VARDIR="/var/run/spindown"
 FIFOPATH=$VARDIR"/spindownd.fifo"
 PIDFILE=$VARDIR"/spindownd.pid"
 
-. /lib/lsb/init-functions
+if ! type log_end_msg &> /dev/null; then
+    log_end_msg()
+    {
+        if [ $1 -eq 0 ]; then
+            echo .
+        else
+            echo " failed."
+        fi
+    }
+fi
+
+if ! type log_daemon_msg &> /dev/null; then
+    log_daemon_msg()
+    {
+        echo -n $1: $2
+    }
+fi
+
+if ! type killproc &> /dev/null; then
+    killproc()
+    {
+        if [ `echo $@ | grep -i PIPE | wc -l` -ne 0 ]
+            kill -pipe `cat $PIDFILE`
+
+        else if [ `echo $@ | grep -i HUP | wc -l` -ne 0 ]
+            kill -hup `cat $PIDFILE`
+
+        else
+            kill `cat $PIDFILE`
+
+        fi fi
+
+        return 0;
+    }
+fi
+
+if ! type start_daemon &> /dev/null; then
+    start_daemon()
+    {
+        $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
+    }
+fi
+
+if ! type status_of_proc &> /dev/null; then
+    status_of_proc()
+    {
+        local pidfile daemon name status
+
+        if [ -a $PIDFILE ]; then
+            echo $name is running
+            return 0
+
+        else
+            echo $name is not running
+            return 1
+
+        fi
+    }
+fi
 
 #prints table with status about the disks
-status() {
+status()
+{
     #print the header of the table
     printf "%-5s %10s %10s %15s %20s\n" name watched active idle-time spindown-time
 
@@ -17,7 +76,7 @@ status() {
 
             printf "%-5s %10s %10s %15s %20s\n" $line
 
-    done < $FIFOPATH 
+    done < $FIFOPATH
 
     exit 0
 }
@@ -49,7 +108,7 @@ case "$1" in
         fi
 
         # First open the fifo and then send the signal
-        status &
+        echo `status` &
         sleep 0.1
         killproc -p $PIDFILE $DAEMON -PIPE
         wait $!

@@ -1,4 +1,9 @@
 Spindown v0.3.1:
+05-04-2009:
+  * Code cleanup.
+  * Added functions to the init file that would take over the lsb functions when they are not
+    available.
+
 04-04-2009:
   * Made a class to keep all the extra functions that used to be in main.
   * Removed includes that weren't used any longer.
