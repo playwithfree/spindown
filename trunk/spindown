@@ -6,6 +6,8 @@ VARDIR="/var/run/spindown"
 FIFOPATH=$VARDIR"/spindownd.fifo"
 PIDFILE=$VARDIR"/spindownd.pid"
 
+. /lib/lsb/init-functions
+
 if ! type log_end_msg &> /dev/null; then
     log_end_msg()
     {
@@ -52,14 +54,12 @@ fi
 if ! type status_of_proc &> /dev/null; then
     status_of_proc()
     {
-        local pidfile daemon name status
-
         if [ -a $PIDFILE ]; then
-            echo $name is running
+            echo $3 is running
             return 0
 
         else
-            echo $name is not running
+            echo $3 is not running
             return 1
 
         fi
