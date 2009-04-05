@@ -35,16 +35,16 @@ DiskSet::DiskSet(unsigned int sgTime) :
 
 DiskSet::~DiskSet()
 {
-  // remove all stored disks
-  for( int i=0 ; i < this->size() ; i++ )
-  {
-    Disk* disk = this->at(i);
+    // remove all stored disks
+    for( int i=0 ; i < this->size() ; i++ )
+    {
+        Disk* disk = this->at(i);
 
-    if (! disk)
-      continue;
+        if (! disk)
+            continue;
 
-    delete disk;
-  }
+        delete disk;
+    }
 }
 
 void DiskSet::setStatsFrom(DiskSet const & set)

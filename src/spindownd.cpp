@@ -29,6 +29,7 @@ string Spindownd::confPath;
 string Spindownd::pidPath;
 bool Spindownd::daemon;
 Spindown* Spindownd::spindown;
+unsigned int Spindownd::cycleTime;
 
 void Spindownd::init(int argc, char* argv[])
 {
@@ -36,23 +37,24 @@ void Spindownd::init(int argc, char* argv[])
     confPath = relToAbs("./spindown.conf");
     pidPath = relToAbs("./spindownd.pid");
     daemon = false;
-    
+    cycleTime = 60;
+
     // First create spindown object, because it can be
     // configured in parseCommandline.
     spindown = new Spindown();
-    
+
     // Configure daemon and paths
     parseCommandline(argc, argv);
-    
+
     // Read the configuration file.
     readConfig(confPath);
-    
+
     // Create the fifo
     mkfifo( fifoPath.data(), 0744 );
-    
+
     // Install signalhandlers
     installSignals();
-    
+
     // Do this last to give the program a chance to print error messages, if any
     if(daemon)
         daemonize();
@@ -60,63 +62,58 @@ void Spindownd::init(int argc, char* argv[])
 
 void Spindownd::run()
 {
+    Log::get()->message(LOG_INFO, "Daemon started.");
+
     while( true )
-    {        
-        spindown->cycle();
-        spindown->wait();
+    {
+        spindown->updateDevNames();
+        spindown->updateDiskStats();
+        spindown->spinDownIdleDisks();
+        sleep(cycleTime);
     }
 }
 
 void Spindownd::installSignals()
 {
-    signal(SIGHUP, Spindownd::sigHandler);
-    signal(SIGTERM, Spindownd::sigHandler);
-    signal(SIGINT, Spindownd::sigHandler);
-    signal(SIGPIPE, Spindownd::sigHandler);
+    signal(SIGPIPE, Spindownd::sigHandlerPipe);
+    signal(SIGHUP, Spindownd::sigHandlerHup);
+    signal(SIGTERM, Spindownd::sigHandlerTerm);
+    signal(SIGINT, Spindownd::sigHandlerTerm);
 }
 
-void Spindownd::sigHandler(int signalNumber)
+void Spindownd::sigHandlerHup(int)
 {
-    switch( signalNumber )
+    readConfig(confPath);
+}
+
+void Spindownd::sigHandlerPipe(int)
+{
+    // We need to make sure that there is a process that has the fifo
+    // open for reading else the whole daemon will lock up. If no program
+    // opens the fifo we'll repport the error and continue.
+    int file = open(fifoPath.data(), O_NONBLOCK | O_WRONLY);
+
+    if(errno==0)
     {
-        case SIGHUP:
-            readConfig(confPath);
-            break;
-            
-        case SIGPIPE:
-            {
-                // We need to make sure that there is a process that has the fifo
-                // open for reading else the whole daemon will lock up. If no program
-                // opens the fifo we'll repport the error and continue.
-                int file = open(fifoPath.data(), O_NONBLOCK | O_WRONLY);
-
-                if(errno==0)
-                {
-                    string status = spindown->getStatusString();
-                    write (file, status.data(), status.size());
-                }
-                else
-                    Log::get()->message(LOG_INFO, "Failed to write to the fifo.");
-
-                close(file);
-            }
-            break;
-
-        case SIGINT:
-        case SIGTERM:
-            delete spindown;
-
-            remove(fifoPath.data());
-            remove(pidPath.data());
-
-            Log::get()->message(LOG_INFO, "Daemon stopped.");
-
-            exit(EXIT_SUCCESS);
-            break;
-
-        default:
-            break;
+        string status = spindown->getStatusString();
+        write (file, status.data(), status.size());
     }
+    else
+        Log::get()->message(LOG_INFO, "Failed to write to the fifo.");
+
+    close(file);
+}
+
+void Spindownd::sigHandlerTerm(int)
+{
+    delete spindown;
+
+    remove(fifoPath.data());
+    remove(pidPath.data());
+
+    Log::get()->message(LOG_INFO, "Daemon stopped.");
+
+    exit(EXIT_SUCCESS);
 }
 
 void Spindownd::parseCommandline(int argc, char* argv[] )
@@ -165,7 +162,7 @@ void Spindownd::parseCommandline(int argc, char* argv[] )
             if( (arg=="-s"||arg=="--status-file") && i+1 < argc )
                 std::cerr << "Statusfile is no longer used. Please use -f or --fifo-path." << endl
                         << "    Please read the help text for more info." << endl;
-                
+
             if( (arg=="-f"||arg=="--fifo-path"||arg=="-s"||arg=="--status-file") && i+1 < argc )
                 fifoPath = relToAbs(argv[++i]);
 
@@ -176,7 +173,7 @@ void Spindownd::parseCommandline(int argc, char* argv[] )
             //daemonize
             else if( arg=="-d" || arg=="--daemon" )
                 daemon = true;
-            
+
             //pid path
             else if( arg=="-p" || arg=="--pid-file" )
                 pidPath = relToAbs(argv[++i]);
@@ -190,9 +187,10 @@ void Spindownd::readConfig(string const &path)
     string section;
     string input;
     struct stat sbuf;
-    DiskSet* newDiskSet, oldDiskSet;
+    DiskSet* newDiskSet = new DiskSet;
     int commonSpinDownTime = 7200;
 
+    // Get information about config file.
     stat(confPath.data(), &sbuf);
 
     // Check if the file is owned by other people as the user that is running
@@ -203,7 +201,7 @@ void Spindownd::readConfig(string const &path)
                 << " group that is running the daemon."<< endl;
         exit (1);
     }
-    
+
     // Check if the file is writeable by other people as the user that is running
     // the daemon.
     if( (sbuf.st_mode & S_IWOTH) == S_IWOTH )
@@ -211,7 +209,7 @@ void Spindownd::readConfig(string const &path)
         std::cerr << "Error: Configuration file is writeable by others." << endl;
         exit(1);
     }
-    
+
     // Try to open the configuration file
     if( (ini=iniparser_load(path.data()))==NULL )
     {
@@ -219,15 +217,13 @@ void Spindownd::readConfig(string const &path)
         exit(1);
     }
 
-    newDiskSet = new DiskSet;
-
     // Go trough the sections of the file
     for( int i=0 ; i < iniparser_getnsec(ini) ; i++ )
     {
-        //read the name of the section
+        // read the name of the section
         section = iniparser_getsecname(ini, i);
 
-        //general section?
+        // general section?
         if( section=="general" )
         {
             commonSpinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
@@ -235,14 +231,14 @@ void Spindownd::readConfig(string const &path)
             if( commonSpinDownTime <= 0 )
                 commonSpinDownTime = 7200;
 
-            spindown->cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
+            cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 60);
 
             if( iniparser_getboolean(ini, string(section+":syslog").data(), 0) )
                 Log::get()->open( (char*)"spindown", LOG_NDELAY, LOG_DAEMON );
             else
                 Log::get()->close();
         }
-        //disk?
+        // disk?
         else if( section.substr(0,4) == "disk" )
         {
             // the parsing of the configuration is up to the Disk class
@@ -255,7 +251,7 @@ void Spindownd::readConfig(string const &path)
         }
     }
 
-    //free the memory of the directory
+    // free the memory of the directory
     iniparser_freedict(ini);
 
     // initialise both the DiskSet as the Disks
@@ -282,7 +278,7 @@ void Spindownd::daemonize()
     // Fork off the parent process
     pid = fork();
     if (pid < 0)
-    exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
 
     // If we got a good PID, then we can exit the parent process.
     if (pid > 0)
@@ -315,21 +311,17 @@ void Spindownd::daemonize()
 
 string Spindownd::relToAbs( string path )
 {
-    static string runPath = "";
-    if( runPath == "" )
-    {
-        char buf[CHAR_BUF];
-        runPath = getcwd( buf, CHAR_BUF );
-    }
-    
-    //if it starts with "./" it's relative
+    char buf[CHAR_BUF];
+    static string runPath = getcwd( buf, CHAR_BUF );
+
+    // If it starts with "./" it's relative.
     if( path.substr(0,2) == "./" )
     {
         path.erase(0,1);
         path.insert( 0, runPath );
     }
 
-    //everything else that doesn't start with "/" it's relative
+    // Everything else that doesn't start with "/" it's relative.
     else if( path.substr(0,1) != "/" )
         path.insert( 0, runPath+"/" );
 

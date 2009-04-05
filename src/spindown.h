@@ -51,12 +51,6 @@ class Spindown
         Spindown();
         
         ~Spindown();
-
-        /**
-         * Preforms one cycle.
-         * Updates disk stats and spins the disks down if needed.
-         */
-        int cycle();
         
         /**
          * Writes the current status to the status file.
@@ -85,17 +79,9 @@ class Spindown
          */
         void updateDevNames();
 
-        /**
-         * Wait cycleTime seconds.
-         */
-        void wait() const;
+        void spinDownIdleDisks();
 
     private:
-        /**
-        * Time between two cycles in seconds
-        */
-        unsigned int cycleTime;
-        
         /**
          * Path from where the script was started
          */
@@ -105,8 +91,6 @@ class Spindown
          * The disks to administer
          */
         DiskSet* disks;
-
-        void spinDownDisks();
 };
 
 #endif
