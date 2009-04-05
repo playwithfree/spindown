@@ -37,6 +37,7 @@ using std::ifstream;
 #include "disk.h"
 #include "log.h"
 #include "diskset.h"
+#include "exceptions.h"
 
 #include "spindown.h"
 
@@ -151,30 +152,53 @@ void Spindown::setDisks(DiskSet* newDiskSet, bool update)
 
 void Spindown::spinDownIdleDisks()
 {
+    Disk* disk;
+    string message;
+    bool active;
+    unsigned int sgTime;
+
     // Commit buffer cache to disk
     sync();
 
     for( int i=0 ; i < disks->size() ; i++ )
     {
-        Disk* disk = disks->at(i);
+        disk = disks->at(i);
 
         if (! disk)
             continue;
 
-        // if more than one entry is found we cannot determine
-        // which entry to spindown. So we ignore this case
+        // If more than one entry is found we cannot determine
+        // which entry to spindown. So we ignore this case.
         if (disks->countEntries(*disk) == 1)
         {
-            unsigned int sgTime = disk->spinDownTime();
+            sgTime = disk->spinDownTime();
 
             // if no spindown time was configured, use the passed default vaule
             if(sgTime == 0)
                 sgTime = disks->getCommonSpindownTime();
 
             // Only spindown disks that have been idle long enough, have a correct
-            // devicename and are active
-            if (disk->getName() != "" && disk->idleTime() >= sgTime && disk->isActive() )
-                disk->spindown();
+            // devicename and are active or should be spundown everytime.
+            if (disk->getName() != "" && disk->idleTime() >= sgTime && (disk->isActive() || disk->getRepeat()) )
+            {
+                active = disk->isActive();
+
+                try
+                {
+                    disk->spindown();
+                }
+                catch (SpindownException e)
+                {
+                    Log::get()->message( LOG_INFO, e.message );
+                    continue;
+                }
+
+                if ( !active )
+                {
+                    message = disk->getName() + " is now inactive.";
+                    Log::get()->message( LOG_INFO, message );
+                }
+            }
         }
     }
 }

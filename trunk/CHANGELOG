@@ -1,5 +1,7 @@
 Spindown v0.3.1:
 05-04-2009:
+  * Added a configuration option that allows you to run the spindown command every cycle, even
+    when the disk is already inactive.
   * Code cleanup.
   * Added functions to the init file that would take over the lsb functions when they are not
     available.
