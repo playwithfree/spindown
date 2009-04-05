@@ -44,25 +44,34 @@ if ! type killproc &> /dev/null; then
     }
 fi
 
-if ! type start_daemon &> /dev/null; then
-    start_daemon()
-    {
-        $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
-    }
-fi
-
 if ! type status_of_proc &> /dev/null; then
     status_of_proc()
     {
         if [ -a $PIDFILE ]; then
-            echo $3 is running
+            echo spindown is running
             return 0
 
         else
-            echo $3 is not running
+            echo spindown is not running
             return 1
 
         fi
+    }
+fi
+
+if ! type start_daemon &> /dev/null; then
+    start_daemon()
+    {
+        if [ -a $PIDFILE ]; then
+            echo spindown is already running.
+            return 1
+
+        else
+            $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
+            return 0
+
+        fi
+
     }
 fi
 
@@ -108,7 +117,7 @@ case "$1" in
         fi
 
         # First open the fifo and then send the signal
-        echo `status` &
+        status &
         sleep 0.1
         killproc -p $PIDFILE $DAEMON -PIPE
         wait $!
