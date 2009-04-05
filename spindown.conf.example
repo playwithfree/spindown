@@ -34,6 +34,12 @@ syslog = 0          # Turn this on if you want spindown to log messages using sy
 #      The time in seconds this disk has to be idle before it is spundown. This overrides
 #      the idle-time configuration in the General section.
 #
+#   - repeat:
+#       Boolean value, if you put this on 1 it will tell spindown to send the command
+#       even when the disk is already spundown. This can be handy when you have a
+#       program like smartd running which is known to spin certain disks up when it
+#       reads SMART information from the disk. The default value is 0.
+#
 # Only name or id are needed, but not both.
 
 # Examples:

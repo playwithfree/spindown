@@ -35,7 +35,6 @@ using std::string;
 
 class Disk
 {
-
   friend class DiskSet;
 
   public:
@@ -60,13 +59,14 @@ class Disk
      * Constructor: Create a new disc to monitor.
      * Either name or id should be empty, but not both
      *
-     * @param	string	id	     The id of the disc to spindown (id's in /dev/disk/by-id).
-     * @param string   name    The device name
-     * @param	bool	   sd      Spin this disc down or not.
-     * @param string   sgPars  The parameters to use with sg_start
-     * @param int      sgTime  The time to wait before spinning down the disk
+     * @param string    id      The id of the disc to spindown (id's in /dev/disk/by-id).
+     * @param string    name    The device name
+     * @param bool      sd      Spin this disc down or not.
+     * @param string    sgPars  The parameters to use with sg_start
+     * @param int       sgTime  The time to wait before spinning down the disk
+     * @param bool      rp      Repeat or not.
      */
-    Disk( string id, string name, bool sd, string sgPars = "--stop", int sgTime = 0 );
+    Disk( string id, string name, bool sd, string sgPars = "--stop", int sgTime = 0, bool rp=false );
 
 
     /**
@@ -85,7 +85,7 @@ class Disk
      * @param       string  dev   the name of a link in /dev/disk/by-id
      */
     void findDevName( string dev );
-    
+
     /**
      * Update the stats.
      * This function also marks a disk as present when it's stats get updated.
@@ -93,7 +93,7 @@ class Disk
      * @param       unsigned long int   the total amount of activity
      */
     void updateStats(unsigned long int);
-    
+
     /**
      * Returns the id of the device as in /dev/disk/by-id
      *
@@ -107,6 +107,8 @@ class Disk
      * @return	string	The name of the device
      */
     string getName() const;
+
+    bool getRepeat() const;
 
     /**
      * Returns true if the disk is watched
@@ -208,6 +210,11 @@ class Disk
      * Tells if the disk has to be spundown
      */
     bool spinDown;
+
+    /**
+     * Do we need to send the command even when the disk is marked idle?
+     */
+    bool repeat;
 
     /**
      * The time a disk needs to be idle before it's spundown.
