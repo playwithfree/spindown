@@ -220,10 +220,10 @@ void Spindownd::readConfig(string const &path)
     // Go trough the sections of the file
     for( int i=0 ; i < iniparser_getnsec(ini) ; i++ )
     {
-        // read the name of the section
+        // Read the name of the section.
         section = iniparser_getsecname(ini, i);
 
-        // general section?
+        // General section?
         if( section=="general" )
         {
             commonSpinDownTime = iniparser_getint(ini, string(section+":idle-time").data(), 7200);
@@ -238,7 +238,7 @@ void Spindownd::readConfig(string const &path)
             else
                 Log::get()->close();
         }
-        // disk?
+        // Disk?
         else if( section.substr(0,4) == "disk" )
         {
             // the parsing of the configuration is up to the Disk class
@@ -251,23 +251,14 @@ void Spindownd::readConfig(string const &path)
         }
     }
 
-    // free the memory of the directory
+    // Free the memory of the directory.
     iniparser_freedict(ini);
 
-    // initialise both the DiskSet as the Disks
+    // Initialise both the DiskSet as the Disks.
     newDiskSet->setCommonSpinDownTime(commonSpinDownTime);
 
-    // If a previous configuration exists, copy the internal status
-    // to the new configuration and delete the old one.
-    if (spindown->disks)
-    {
-        Spindown::updateDevNames(newDiskSet);
-        spindown->updateDevNames();
-        newDiskSet->setStatsFrom(*spindown->disks);
-        delete spindown->disks;
-    }
-
-    spindown->disks = newDiskSet;
+    // Put the new set in spindown.
+    spindown->setDisks(newDiskSet, true);
 }
 
 void Spindownd::daemonize()

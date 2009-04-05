@@ -42,7 +42,7 @@ using std::ifstream;
 
 Spindown::Spindown()
 {
-    disks = 0;
+    disks = NULL;
 }
 
 Spindown::~Spindown()
@@ -125,6 +125,28 @@ void Spindown::updateDiskStats(DiskSet* disks)
 void Spindown::updateDiskStats()
 {
     updateDiskStats(disks);
+}
+
+DiskSet* Spindown::getDisks()
+{
+    return disks;
+}
+
+void Spindown::setDisks(DiskSet* newDiskSet, bool update)
+{
+    // If a previous configuration exists, copy the internal status
+    // to the new configuration and delete the old one.
+    if (disks != NULL && update)
+    {
+        updateDevNames(newDiskSet);
+        updateDevNames();
+        newDiskSet->setStatsFrom(*disks);
+    }
+
+    if (disks != NULL)
+        delete disks;
+
+    disks = newDiskSet;
 }
 
 void Spindown::spinDownIdleDisks()
