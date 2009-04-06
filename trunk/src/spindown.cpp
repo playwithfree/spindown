@@ -179,7 +179,7 @@ void Spindown::spinDownIdleDisks()
 
             // Only spindown disks that have been idle long enough, have a correct
             // devicename and are active or should be spundown everytime.
-            if (disk->getName() != "" && disk->idleTime() >= sgTime && (disk->isActive() || disk->getRepeat()) )
+            if (disk->getName() != "" && disk->idleTime() >= sgTime && (disk->isActive() || disk->getRepeat()))
             {
                 active = disk->isActive();
 
@@ -193,7 +193,7 @@ void Spindown::spinDownIdleDisks()
                     continue;
                 }
 
-                if ( !active )
+                if (active)
                 {
                     message = disk->getName() + " is now inactive.";
                     Log::get()->message( LOG_INFO, message );

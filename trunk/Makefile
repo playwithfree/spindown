@@ -1,6 +1,6 @@
 SBINDIR = $(DESTDIR)/sbin
 ETCDIR = $(DESTDIR)/etc
-VERSION = 0.3.1
+VERSION = 0.4.0
 OBJS = main.o diskset.o disk.o spindown.o iniparser.o dictionary.o log.o spindownd.o\
         exceptions.o
 CC = g++
