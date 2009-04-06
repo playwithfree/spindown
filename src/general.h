@@ -5,4 +5,4 @@
 
 #define CHAR_BUF   256
 
-#define VERSION    "0.3.1"
+#define VERSION    "0.4.0"

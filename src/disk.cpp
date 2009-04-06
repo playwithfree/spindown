@@ -51,7 +51,7 @@ Disk* Disk::create( dictionary& ini, string const & section)
     int sgTime     = iniparser_getint (&ini, string(section+":idle-time").data(), 0);
     bool repeat    = iniparser_getboolean(&ini, string(section+":repeat").data(), 0);
 
-    Disk* newDisk = new Disk(id, name, sd, command, sgTime);
+    Disk* newDisk = new Disk(id, name, sd, command, sgTime, repeat);
 
     return newDisk;
 }
