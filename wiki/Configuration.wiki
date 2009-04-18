@@ -99,6 +99,9 @@ If you found the command that works for disk, just fill it in without the path t
 
 As of version 0.2 of spindown it is also possible to set the idle-time per disk. This time is also given in seconds.
 
+====Repeat parameter====
+Since version 0.4.0. Boolean value, if you set this to 1 it will tell spindown to send the command even when the disk is already spundown. This can be handy when you have a program like smartd running which is known to spin certain disks up when it reads SMART information from the disk. The default value is 0.
+
 ====Example of disk section====
 
 So your disk sections may look something like this:
