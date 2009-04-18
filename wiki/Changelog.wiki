@@ -1,4 +1,27 @@
 #labels Featured
+==Spindown v0.4.0==
+===05-04-2009===
+  * Added a configuration option that allows you to run the spindown command every cycle, even when the disk is already inactive.
+  * Added functions to the init file that would take over the lsb functions when they are not available.
+  * Code cleanup.
+
+===04-04-2009===
+  * Made a class to keep all the extra functions that used to be in main.
+  * Removed includes that weren't used any longer.
+
+===03-04-2009===
+  * Fixed a security issue that allowed attackers to execute malicious commands as root when the configuration file wasn't properly secured.
+
+===02-04-2009===
+  * Fixed a bug that let spindown display the stats of disks that were not present in the system when they were defined in the configuration file with there device name.
+  * Fixed another bug that could let spindown hang when SIGPIPE is send but the fifo is never opend.
+
+===24-03-2009===
+  * Previous changelog was wrong: "The status file is now only updated when the daemon receives the SIGPOLL." Should have been "... daemon receives the SIGPIPE signal.
+  * Fixed Issue 4: Spindown status not showing 80% of time.
+      Happend when spindownd wasn't ready with writing to the status file when cat was already reading from it. Fixed by reverting back to the fifo.
+  * Added a directory to /var/run to keep the 2 files in spindown uses.
+----
 ==Spindown v0.3.0==
 ===13-02-2009===
   * The status file is now only updated when the daemon receives the SIGPOLL.
