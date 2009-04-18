@@ -218,4 +218,5 @@ void Disk::setStatsFrom(Disk const & disk)
     // only copy the internal status, don't touch configuration!
     lastActive  = disk.lastActive;
     active      = disk.active;
-    totalBlocks = disk.totalBl
+    totalBlocks = disk.totalBlocks;
+}
