@@ -300,4 +300,43 @@ void Spindownd::daemonize()
         ofstream pidFile;
         pidFile.open(pidPath.data());
         pidFile << pid;
-        pidFile.cl
+        pidFile.close();
+        exit(EXIT_SUCCESS);
+    }
+
+    // Change the file mode mask
+    umask(0);
+
+    // Create a new SID for the child process
+    sid = setsid();
+    if (sid < 0)
+        exit(EXIT_FAILURE);
+
+    // Change the current working directory
+    if ((chdir("/")) < 0)
+        exit(EXIT_FAILURE);
+
+    // Close out the standard file descriptors
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+}
+
+string Spindownd::relToAbs( string path )
+{
+    char buf[CHAR_BUF];
+    static string runPath = getcwd( buf, CHAR_BUF );
+
+    // If it starts with "./" it's relative.
+    if( path.substr(0,2) == "./" )
+    {
+        path.erase(0,1);
+        path.insert( 0, runPath );
+    }
+
+    // Everything else that doesn't start with "/" it's relative.
+    else if( path.substr(0,1) != "/" )
+        path.insert( 0, runPath+"/" );
+
+    return path;
+}
