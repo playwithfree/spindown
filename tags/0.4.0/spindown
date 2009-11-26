@@ -1,0 +1,147 @@
+#!/bin/bash
+
+DAEMON="/sbin/spindownd"
+CONFPATH="/etc/spindown.conf"
+VARDIR="/var/run/spindown"
+FIFOPATH=$VARDIR"/spindownd.fifo"
+PIDFILE=$VARDIR"/spindownd.pid"
+
+. /lib/lsb/init-functions
+
+if ! type log_end_msg &> /dev/null; then
+    log_end_msg()
+    {
+        if [ $1 -eq 0 ]; then
+            echo .
+        else
+            echo " failed."
+        fi
+    }
+fi
+
+if ! type log_daemon_msg &> /dev/null; then
+    log_daemon_msg()
+    {
+        echo -n $1: $2
+    }
+fi
+
+if ! type killproc &> /dev/null; then
+    killproc()
+    {
+        if [ `echo $@ | grep -i PIPE | wc -l` -ne 0 ]; then
+            kill -pipe `cat $PIDFILE`
+
+        else if [ `echo $@ | grep -i HUP | wc -l` -ne 0 ]; then
+            kill -hup `cat $PIDFILE`
+
+        else
+            kill `cat $PIDFILE`
+
+        fi fi
+
+        return 0;
+    }
+fi
+
+if ! type status_of_proc &> /dev/null; then
+    status_of_proc()
+    {
+        if [ -a $PIDFILE ]; then
+            echo spindown is running.
+            return 0
+
+        else
+            echo spindown is not running.
+            return 1
+
+        fi
+    }
+fi
+
+if ! type start_daemon &> /dev/null; then
+    start_daemon()
+    {
+        if [ -a $PIDFILE ]; then
+            return 1
+
+        else
+            $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
+            return 0
+
+        fi
+
+    }
+fi
+
+#prints table with status about the disks
+status()
+{
+    #print the header of the table
+    printf "%-5s %10s %10s %15s %20s\n" name watched active idle-time spindown-time
+
+    while read line; do
+
+            printf "%-5s %10s %10s %15s %20s\n" $line
+
+    done < $FIFOPATH
+
+    exit 0
+}
+
+case "$1" in
+    "start")
+        log_daemon_msg "Starting disk spindown daemon" "spindownd"
+        mkdir $VARDIR &> /dev/null
+        start_daemon -p $PIDFILE $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
+        log_end_msg $?
+
+        exit $?
+        ;;
+
+    "stop")
+        log_daemon_msg "Stopping disk spindown daemon" "spindownd"
+        killproc -p $PIDFILE $DAEMON
+        rmdir $VARDIR &> /dev/null
+        log_end_msg $?
+
+        exit $?
+        ;;
+
+    "status")
+        if status_of_proc -p $PIDFILE $DAEMON spindown; then
+            echo -n
+        else
+            exit 1
+        fi
+
+        # First open the fifo and then send the signal
+        status &
+        sleep 0.1
+        killproc -p $PIDFILE $DAEMON -PIPE
+        wait $!
+
+        exit 0
+        ;;
+
+    "restart"|"condrestart")
+        $0 stop
+        $0 start
+
+        exit $?
+        ;;
+
+    "reload")
+        log_daemon_msg "Reloading disk spindown daemon" "spindownd"
+        killproc -p $PIDFILE $DAEMON -HUP
+        log_end_msg $?
+
+        exit $?
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+
+exit 0

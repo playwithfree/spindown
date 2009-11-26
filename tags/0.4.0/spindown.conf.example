@@ -1,0 +1,55 @@
+[General]
+cycle-time = 60     # Number of seconds between cycles.
+
+idle-time = 3600    # The time in seconds a disk has to be idle before it is spundown.
+                    # Do not use a value that is to small (less than 3600) unless you
+                    # know what you are doing.
+
+syslog = 0          # Turn this on if you want spindown to log messages using syslog.
+                    # You will not want to turn this on if you are trying to spindown
+                    # the disk with the root filesystem on.
+
+# Add as much disks as you want.
+#
+# The following parameters are allowed: id, name, spindown and command.
+#
+#   - id:
+#       You can find the id by doing "ls -l /dev/disk/by-id/", the advantage of using
+#       id over name is that you can swap disks while the daemon is running and it
+#       doesn't matter that the device name changes.
+#
+#   - name:
+#       The name can be given up like this: sda, sdb, hda, hdc, ...
+#
+#   - spindown:
+#       This is a boolean value, put it on 1 if you want spindown to spindown the disk
+#       or put it on 0 of you want spindown to leave it untouched. The default is 0.
+#
+#   - command:
+#       The command to execute when the disk goes idle. The path to the device will be
+#       added at the end of this string.
+#       Default is: "sg_start --stop"
+#
+#   - idle-time:
+#      The time in seconds this disk has to be idle before it is spundown. This overrides
+#      the idle-time configuration in the General section.
+#
+#   - repeat:
+#       Boolean value, if you put this on 1 it will tell spindown to send the command
+#       even when the disk is already spundown. This can be handy when you have a
+#       program like smartd running which is known to spin certain disks up when it
+#       reads SMART information from the disk. The default value is 0.
+#
+# Only name or id are needed, but not both.
+
+# Examples:
+# [Disk 0]
+# id = ata-Hitachi_HTS54161-SB2404SJHD07JE
+# spindown = 1
+
+# [Disk 1]
+# name = sda
+# spindown = 1
+# command = hdparm -y
+
+# Because of a bug in iniParser you should leave an empty line at the bottom of this file.

@@ -1,0 +1,13 @@
+To make an installation type:
+  # make
+  # make install
+
+Before you can run it you'll need to copy the spindown.conf.example file to
+/etc/spindown.conf and adapt it to your needs. You can run the deamon like this:
+  # /etc/init.d/spindown start
+
+You can also get the status as following:
+  # /etc/init.d/spindown status
+
+If you would like to work on the code you can run the daemon from the source
+directory. It will then look for all the files in that location.
