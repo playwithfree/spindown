@@ -15,6 +15,12 @@ VERSION = 0.5.0
 OBJS = $(TARGET)main.o $(TARGET)disk.o $(TARGET)spindown.o $(TARGET)iniparser.o\
 		$(TARGET)dictionary.o $(TARGET)log.o $(TARGET)spindownd.o $(TARGET)exceptions.o
 
+all: $(TARGET)spindownd
+	@echo "---"
+	@echo "THE CONFIGURATION FILE HAS CHANGED SINCE V0.4.0!!!!"
+	@echo "Please see the changelog and the example configuration file for more information."
+	@echo "---"
+
 debug:
 	mkdir -p Debug
 	$(MAKE) all TARGET="Debug/" LDFLAGS="$(LDFLAGS) -g" CXXFLAGS="$(CXXFLAGS) -g"
@@ -28,12 +34,6 @@ release:
 
 release-clean:
 	$(MAKE) clean TARGET="Release/"
-
-all: $(TARGET)spindownd
-	@echo "---"
-	@echo "THE CONFIGURATION FILE HAS CHANGED SINCE V0.4.0!!!!"
-	@echo "Please see the changelog and the example configuration file for more information."
-	@echo "---"
 
 clean:
 	rm -f $(OBJS) $(TARGET)spindownd
