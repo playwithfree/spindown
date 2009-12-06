@@ -54,6 +54,8 @@ public:
 
 	Disk& getDiskByDevice(string);
 
+	Disk& getDiskByName(string);
+
 	list<Disk>& getDisks();
 
 	Disk& getDefaultDisk();
@@ -66,8 +68,6 @@ private:
 	string devById;
 
 	string diskstats;
-
-	Disk& getDiskByName(string);
 };
 
 #endif

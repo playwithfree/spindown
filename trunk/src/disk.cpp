@@ -174,7 +174,7 @@ void Disk::spindown()
         int ret;
         string cmd = command + " " + device;
 
-        if(!(ret=system(cmd.data())))
+        if((ret=system(cmd.data())) == 0)
         {
             active = false;
         }

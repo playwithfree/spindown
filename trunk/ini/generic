@@ -22,7 +22,7 @@ status()
 
 case "$1" in
     "start")
-        echo -n Starting disk spindown daemon: spindownd 
+        echo -n "Starting disk spindown daemon: spindownd " 
         
         mkdir -p $VARDIR &> /dev/null
         
@@ -34,7 +34,7 @@ case "$1" in
         ;;
 
     "stop")
-        echo -n Stopping disk spindown daemon: spindownd 
+        echo -n "Stopping disk spindown daemon: spindownd "
         
         kill `cat $PIDFILE`
         
@@ -72,7 +72,7 @@ case "$1" in
         ;;
 
     "reload")
-        echo -n Reloading disk spindown daemon: spindownd 
+        echo -n "Reloading disk spindown daemon: spindownd " 
         
         kill -hup `cat $PIDFILE`
         
