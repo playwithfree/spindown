@@ -24,12 +24,27 @@
 * Contact: Dimitri Michaux <dimitri.michaux@gmail.com>
 */
 
+#include <iostream>
+
+using namespace std;
+
 #include "spindownd.h"
+#include "exceptions.h"
 
 int main( int argc, char* argv[] )
 {
-    Spindownd::init(argc,argv);
-    Spindownd::run();
+	try
+	{
+		Spindownd::init(argc,argv);
+		Spindownd::run();
+	}
+
+	catch(SpindownException e)
+	{
+		cerr << "SpindownException: "<< e.message << endl;
+
+		return 1;
+	}
 
     return 0;
 }

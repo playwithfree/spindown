@@ -25,139 +25,160 @@
 #include <stddef.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <string.h>
 
 #include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
+#include <cstdlib>
 
-using std::string;
-using std::vector;
-using std::ostringstream;
+using namespace std;
 
-#include "general.h"
 #include "log.h"
 #include "exceptions.h"
-#include "ininiparser3.0b/iniparser.h"
 
 #include "disk.h"
 
-Disk* Disk::create( dictionary& ini, string const & section)
+Disk::Disk(string dev, bool sd, string cmd, int sdTime, bool rp)
 {
-    string id      = iniparser_getstring (&ini, string(section+":id").data(),       (char*)"");
-    string name    = iniparser_getstring (&ini, string(section+":name").data(),     (char*)"");
-    bool sd        = iniparser_getboolean(&ini, string(section+":spindown").data(), 0);
-    string command = iniparser_getstring (&ini, string(section+":command").data(),  (char*)"sg_start --stop");
-    int sgTime     = iniparser_getint (&ini, string(section+":idle-time").data(), 0);
-    bool repeat    = iniparser_getboolean(&ini, string(section+":repeat").data(), 0);
+    repeat     	 = rp;
+    device		 = dev;
+    command      = cmd;
+    doSpindown	 = sd;
+    spindownTime = sdTime;
 
-    Disk* newDisk = new Disk(id, name, sd, command, sgTime, repeat);
+    active     	  	  = true;
+    lastActive  	  = time(NULL);
+    blocksTransferred = 0;
 
-    return newDisk;
+    poke();
 }
 
-Disk::Disk( string id, string name, bool sd, string cmd, int sdTime, bool rp )
+
+void Disk::setDevice(string dev)
 {
-    // If both names are empty something is wrong
-    if( id == "" && name == "" )
-    {
-        std::cerr << "Error: there is a disk with no name or id in your configurationfile!" << std::endl;
-        exit( 1 );
-    }
-
-    // One has to be empty
-    if( id != "" && name != "" )
-    {
-        std::cerr << "Error: there is a disk with both name and id in your configurationfile!" << std::endl
-                << "(Hint: id: " << id << " name: " << name << ")" << std::endl;
-        exit( 1 );
-    }
-
-    devId = id;
-    devName = name;
-    localSpinDownTime = sdTime < 0 ? 0 : sdTime;
-
-    totalBlocks = 0;
-
-    command = cmd;
-
-    lastActive = time(NULL);
-
-    active = true;
-    spinDown = sd;
-    repeat = rp;
-    present = false;
+    device = dev;
 }
 
-Disk::~Disk()
+
+string Disk::getDevice() const
 {
+	return device;
 }
 
-void Disk::updateStats(unsigned long int newBlocks)
+
+void Disk::poke()
 {
-    if( devName == "" )
-    {
-        totalBlocks = 0;
-        return;
-    }
+	devName	  = searchDevName();
+	connected = searchConnected();
+}
 
-    // If we meet the disk here we'll asume it is present in the system.
-    present = true;
 
-    // The values from /proc/diskstats can overflow because they are 32-bit integers.
-    // But because we are only looking for changes we don't have to detect it.
-    if( newBlocks != totalBlocks )
+string Disk::searchDevName() const
+{
+	string dir;
+
+	dir = device.substr(0, device.find_last_of('/') + 1);
+
+	if(dir == "/dev/")
+		return device.substr(device.find_last_of('/') + 1);
+
+	if(dir == "/dev/disk/by-id/")
+	{
+		char   buf[256], link[device.length()];
+		size_t len;
+
+		strcpy(link,device.data());
+
+		if((len = readlink(link, buf, 256)) != -1)
+		{
+			buf[len] = '\0';
+
+			string buffer(buf);
+
+			return buffer.substr(buffer.find_last_of('/') + 1);
+		}
+	}
+
+	return "";
+}
+
+
+bool Disk::searchConnected() const
+{
+    struct stat sbuf;
+
+    if(stat(device.data(), &sbuf) == 0)
+    	return true;
+
+    else
+    	return false;
+}
+
+
+string Disk::getDevName() const
+{
+	return devName;
+}
+
+
+bool Disk::getConnected() const
+{
+	return connected;
+}
+
+
+bool Disk::getActive() const
+{
+    return active;
+}
+
+
+bool Disk::getIdle() const
+{
+    if(getIdleTime() >= spindownTime)
+        return true;
+    else
+        return false;
+}
+
+
+void Disk::setBlocksTransferred(unsigned int blocks)
+{
+    if( blocksTransferred != blocks )
     {
         //if the disk was not active, but now is, log a message
         if( !active )
-            Log::get()->message( LOG_INFO, devName + " is now active." );
+            Log::get()->message( LOG_INFO, getDevName() + " is now active." );
 
         lastActive = time(NULL);
-        active = true;
+        active     = true;
     }
 
-    totalBlocks = newBlocks;
+    blocksTransferred = blocks;
 }
 
-void Disk::findDevName( string dev )
+
+unsigned int Disk::getBlocksTransferred()
 {
-    //no need to do this when the id is empty, this means this is a nonswapable disk
-    if( devId == "" )
-        return;
-
-    //we use . to reset the device name
-    else if( dev == "." )
-        devName = "";
-
-    //do the normal thing
-    else if( dev == devId )
-    {
-        string buffer;
-        buffer.resize( CHAR_BUF );
-
-        //the path to the device
-        dev = DEVID_PATH + dev;
-        //read target of the link
-        readlink( (char*)dev.data(), (char*)buffer.data(), CHAR_BUF);
-        //remove empty characters
-        buffer.resize( buffer.find_first_of((char)0) );
-        //remove ../../ from the link target
-        devName = buffer.substr(buffer.find_last_of("/")+1,buffer.size()-buffer.find_last_of("/") );
-    }
+	return blocksTransferred;
 }
 
-bool Disk::spindown()
+
+void Disk::spindown()
 {
-    if (isPresent() && spinDown)
+    if (connected && doSpindown)
     {
         int ret;
-        string cmd = command + " /dev/" + devName;
+        string cmd = command + device;
 
         if(!(ret=system(cmd.data())))
         {
             active = false;
-            return true;
         }
+
         else
         {
             ostringstream oss;
@@ -167,56 +188,51 @@ bool Disk::spindown()
     }
 }
 
-string Disk::getName() const
+
+void Disk::setSpindownTime(int sdt)
 {
-    return devName;
+	spindownTime = sdt;
+}
+
+
+int Disk::getSpindownTime() const
+{
+	return spindownTime;
+}
+
+
+int Disk::getIdleTime() const
+{
+	return difftime(time(NULL), lastActive);
+}
+
+
+bool Disk::getDoSpindown() const
+{
+	return doSpindown;
+}
+
+void Disk::setDoSpindown(bool sd)
+{
+	doSpindown = sd;
+}
+
+string Disk::getCommand() const
+{
+	return command;
+}
+
+void Disk::setCommand(string cmd)
+{
+	command = cmd;
 }
 
 bool Disk::getRepeat() const
 {
-    return repeat;
+	return repeat;
 }
 
-bool Disk::isWatched() const
+void Disk::setRepeat(bool rp)
 {
-    return ((devName!="")&&spinDown) ? true : false;
-}
-
-bool Disk::isActive() const
-{
-    return active;
-}
-
-bool Disk::isPresent() const
-{
-    if(devName!="" && present)
-        return true;
-    else
-        return false;
-}
-
-void Disk::resetPresent()
-{
-    present = false;
-}
-
-unsigned int Disk::idleTime() const
-{
-    if(isPresent())
-        return (unsigned int)difftime( time(NULL), lastActive );
-    else
-        return 0;
-}
-
-unsigned int Disk::spinDownTime() const
-{
-    return localSpinDownTime;
-}
-
-void Disk::setStatsFrom(Disk const & disk)
-{
-    // only copy the internal status, don't touch configuration!
-    lastActive  = disk.lastActive;
-    active      = disk.active;
-    totalBlocks = disk.totalBlocks;
+	repeat = rp;
 }
