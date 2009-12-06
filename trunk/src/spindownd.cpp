@@ -292,10 +292,10 @@ void Spindownd::readConfig(string const &path)
 
 
     // Get default configuration
-	idleTime = iniparser_getint(ini, string(section+":idle-time").data(), 1800);
-	sd		 = iniparser_getboolean(ini, string(section+":spindown").data(), false);
-	cmd		 = iniparser_getstring(ini, string(section+":command").data(), defCmd);
-	rp		 = iniparser_getboolean(ini, string(section+":repeat").data(), false);
+	idleTime = iniparser_getint(ini, string("default disk:idle-time").data(), 1800);
+	sd		 = iniparser_getboolean(ini, string("default disk:spindown").data(), false);
+	cmd		 = iniparser_getstring(ini, string("default disk:command").data(), defCmd);
+	rp		 = iniparser_getboolean(ini, string("default disk:repeat").data(), false);
 
 	spindown.getDefaultDisk().setSpindownTime(idleTime);
 	spindown.getDefaultDisk().setDoSpindown(sd);
@@ -318,7 +318,7 @@ void Spindownd::readConfig(string const &path)
         // Read the name of the section.
         section = iniparser_getsecname(ini, i);
 
-        if(section.find_first_of("disk") == 0)
+        if(section.substr(0,4) == "disk")
         {
         	idleTime = iniparser_getint(ini, string(section+":idle-time").data(), spindown.getDefaultDisk().getSpindownTime());
         	sd		 = iniparser_getboolean(ini, string(section+":spindown").data(), spindown.getDefaultDisk().getDoSpindown());
@@ -338,14 +338,26 @@ void Spindownd::readConfig(string const &path)
 
         	try
         	{
-        		disk = &spindown.getDiskByName(device.substr(device.find_last_of('/') + 1));
+        		Disk& disk = spindown.getDiskByName(device.substr(device.find_last_of('/') + 1));
+
+    			disk.setSpindownTime(idleTime);
+    			disk.setDoSpindown(sd);
+    			disk.setCommand(cmd);
+    			disk.setDevice(device);
+    			disk.setRepeat(rp);
         	}
 
         	catch(SpindownException e)
         	{
 				try
 				{
-					disk = &spindown.getDiskByDevice(device);
+					Disk& disk = spindown.getDiskByDevice(device);
+
+	    			disk.setSpindownTime(idleTime);
+	    			disk.setDoSpindown(sd);
+	    			disk.setCommand(cmd);
+	    			disk.setDevice(device);
+	    			disk.setRepeat(rp);
 				}
 
 				catch(SpindownException e)
@@ -354,20 +366,13 @@ void Spindownd::readConfig(string const &path)
 
 					spindown.getDisks().push_back(disk);
 
-					spindown.sort();
-
 					continue;
 				}
         	}
-
-			disk->setSpindownTime(idleTime);
-			disk->setDoSpindown(sd);
-			disk->setCommand(cmd);
-			disk->setDevice(device);
-			disk->setRepeat(rp);
         }
     }
 
+	spindown.sort();
 
     iniparser_freedict(ini);
 }
