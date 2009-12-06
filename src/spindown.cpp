@@ -41,7 +41,7 @@ struct DiskSort
 {
 	bool operator()( Disk& a, Disk& b )
 	{
-		return a.getDevName() < b.getDevName();
+		return a.getDevice() < b.getDevice();
 	}
 };
 
@@ -115,8 +115,9 @@ void Spindown::updateDisks()
 
 		catch(SpindownException e)
 		{
-			Disk newDisk("/dev/" + devName);
+			Disk newDisk = defaultDisk;
 
+			newDisk.setDevice("/dev/" + devName);
 			newDisk.setBlocksTransferred(read + write);
 
 			disks.push_back(newDisk);
@@ -164,7 +165,15 @@ void Spindown::printSet()
 {
 	list<Disk>::iterator disk;
 
-	cout << "devName connected active idletime blocks cmd" << endl;
+	cout << "devName connected active watch idletime blocks cmd" << endl;
+
+	cout << "default" << " "
+		<< (defaultDisk.getConnected() ? "1" : "0") << " "
+		<< (defaultDisk.getActive() ? "1" : "0") << " "
+		<< defaultDisk.getDoSpindown() << " "
+		<< defaultDisk.getIdleTime() << " "
+		<< defaultDisk.getBlocksTransferred() << " "
+		<< defaultDisk.getCommand() << endl;
 
 	// Find the disk and update the stats
 	for(disk = disks.begin() ; disk != disks.end() ; ++disk)
@@ -172,6 +181,7 @@ void Spindown::printSet()
 		cout << disk->getDevice() << " "
 			<< (disk->getConnected() ? "1" : "0") << " "
 			<< (disk->getActive() ? "1" : "0") << " "
+			<< disk->getDoSpindown() << " "
 			<< disk->getIdleTime() << " "
 			<< disk->getBlocksTransferred() << " "
 			<< disk->getCommand() << endl;
