@@ -41,7 +41,7 @@ struct DiskSort
 {
 	bool operator()( Disk& a, Disk& b )
 	{
-		return a.getDevice() < b.getDevice();
+		return a.getDevName() < b.getDevName();
 	}
 };
 
@@ -143,7 +143,19 @@ void Spindown::spindownIdleDisks()
 	 for(disk = disks.begin() ; disk != disks.end() ; ++disk)
 	 {
 		 if(disk->getConnected() && disk->getIdle())
-			 disk->spindown();
+		 {
+			 try
+			 {
+				 disk->spindown();
+				 Log::get()->message(LOG_INFO
+						 , "Spinning down: " + disk->getDevice());
+			 }
+
+			 catch(SpindownException e)
+			 {
+				 Log::get()->message(LOG_INFO, e.message);
+			 }
+		 }
 	 }
 }
 
