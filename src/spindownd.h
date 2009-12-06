@@ -52,10 +52,12 @@ class Spindownd
         static void readConfig(string const &);
 
     private:
-        static Spindown* spindown;
-        static string fifoPath;
-        static string confPath;
-        static string pidPath;
+        static Spindown spindown;
+
+        static string fifoPath
+			,confPath
+			,pidPath;
+
         static bool daemon;
 
         /**

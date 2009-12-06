@@ -31,81 +31,43 @@
 #define SPINDOWN_CLASS_H
 
 #include <string>
-using std::string;
+#include <list>
+
+using namespace std;
 
 class Disk;
-class DiskSet;
 
 class Spindown
 {
-    public:
-        /**
-        * Constructor:
-        * Does some basic checks and initialisations.
-        *
-        * @param   int     argc
-        * @param   char*[] argv
-        */
-        Spindown();
+public:
+	Spindown(string);
 
-        ~Spindown();
+	void updateDisks();
 
-        /**
-         * Writes the current status to the status file.
-         */
-        string getStatusString(bool all=false) const;
+	void spindownIdleDisks();
 
-        /**
-         * Updates the disk stats.
-         */
-        static void updateDiskStats(DiskSet*);
+	void printSet();
 
-        /**
-         * Overload function, calls updateDiskStats with the DiskSet of the
-         * current object.
-         */
-        void updateDiskStats();
+	void sort();
 
-        /**
-         * Update the device names so they correspond with the device id's.
-         */
-        static void updateDevNames(DiskSet*);
+	void pokeDisks();
 
-        /**
-         * Overload function, calls updateDevNames with the DiskSet of the
-         * current object.
-         */
-        void updateDevNames();
+	Disk& getDiskByDevice(string);
 
-        /**
-         * Decides which disks should be spundown.
-         */
-        void spinDownIdleDisks();
+	list<Disk>& getDisks();
 
-        /**
-         * Returns a pointer to the internal disk set.
-         */
-        DiskSet* getDisks();
+	Disk& getDefaultDisk();
 
-        /**
-         * Replaces the internal disk set by a new one.
-         *
-         * @param DiskSet* newDiskSet   the new disk set
-         * @param bool     update       set to true if you want to copy the stats
-         *                                  from the old set to the new.
-         */
-        void setDisks(DiskSet*, bool=false);
+private:
+	list<Disk> disks;
 
-    private:
-        /**
-         * Path from where the script was started
-         */
-        string runPath;
+	Disk defaultDisk;
 
-        /**
-         * The disks to administer
-         */
-        DiskSet* disks;
+	string devById;
+
+	string diskstats;
+
+	Disk& getDiskByName(string);
 };
 
 #endif

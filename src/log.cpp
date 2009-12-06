@@ -54,7 +54,7 @@ void Log::open( char* ident, int option, int facility)
 void Log::message(int facility_priority, string message)
 {
     if( opend )
-        syslog( facility_priority, message.data() );
+        syslog(facility_priority, message.data());
 }
 
 void Log::close()

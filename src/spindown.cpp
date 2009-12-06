@@ -26,201 +26,180 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
+#include <list>
 
-using std::string;
-using std::ios;
-using std::endl;
-using std::ostringstream;
-using std::ifstream;
+using namespace std;
 
-#include "general.h"
 #include "disk.h"
 #include "log.h"
-#include "diskset.h"
 #include "exceptions.h"
 
 #include "spindown.h"
 
-Spindown::Spindown()
+
+struct DiskSort
 {
-    disks = NULL;
+	bool operator()( Disk& a, Disk& b )
+	{
+		return a.getDevice() < b.getDevice();
+	}
+};
+
+
+Spindown::Spindown(string stats)
+{
+    diskstats = stats;
 }
 
-Spindown::~Spindown()
+
+void Spindown::pokeDisks()
 {
-    delete disks;
+	 list<Disk>::iterator disk;
+
+	 // Find the disk and update the stats
+	 for(disk = disks.begin() ; disk != disks.end() ; ++disk)
+		 disk->poke();
 }
 
-void Spindown::updateDevNames(DiskSet* set)
-{
-    //dir pointer
-    DIR *dp;
-    //structure containing file data
-    struct dirent *ep;
 
-    if ( (dp = opendir (DEVID_PATH)) != NULL)
-    {
-        while (ep = readdir (dp))
-        {
-            for( int i=0 ; i < set->size() ; i++ )
-                set->at(i)->findDevName(ep->d_name);
-        }
-        (void) closedir (dp);
-    }
+void Spindown::updateDisks()
+{
+	ifstream file(diskstats.data(), ios::in);
+
+	istringstream stream;
+
+	string 	  	 devName, line;
+
+	unsigned int read, write;
+
+	int iDontCare;
+
+	Disk disk;
+
+
+	// See if the file is open
+	if(!file)
+	{
+		string msg("Can't open file: ");
+		msg += diskstats;
+		Log::get()->message(LOG_INFO, msg);
+
+		return;
+	}
+
+
+	// Update every disk
+	getline(file, line);
+
+	while(!file.eof())
+	{
+		stream.str(line);
+
+		stream >> iDontCare >> iDontCare >> devName
+			>> iDontCare >> iDontCare >> read
+			>> iDontCare >> iDontCare >> write;
+
+		getline(file, line);
+
+		if(devName.length() != 3
+			|| (devName.substr(0,2) != "sd"
+				&& devName.substr(0,2) != "hd"))
+		{
+			continue;
+		}
+
+		try
+		{
+			getDiskByName(devName).setBlocksTransferred(read + write);
+		}
+
+		catch(SpindownException e)
+		{
+			Disk newDisk("/dev/" + devName);
+
+			newDisk.setBlocksTransferred(read + write);
+
+			disks.push_back(newDisk);
+
+			sort();
+		}
+	}
 }
 
-void Spindown::updateDevNames()
+
+void Spindown::sort()
 {
-    updateDevNames(disks);
+	DiskSort s;
+
+	disks.sort(s);
 }
 
-void Spindown::updateDiskStats(DiskSet* disks)
+
+void Spindown::spindownIdleDisks()
 {
-    ifstream fin(STATS_PATH, ios::in);
-    string devNameInp;  //the name of the device read from the configuration
-    unsigned int newRead, newWritten;
-    unsigned long int blocks;
-    char str[CHAR_BUF];
-    int i;
+	 list<Disk>::iterator disk;
 
-    if(fin)
-    {
-        // Assume all disk are no longer in the system. They will be marked
-        // as present when their stats are updated.
-        for(i=0 ; i < disks->size() ; i++)
-            disks->at(i)->resetPresent();
-
-        while( fin.getline(str,CHAR_BUF) )
-        {
-            // Clear the device name and give it a length of 32
-            devNameInp = "";
-            devNameInp.resize( 32 );
-
-            // Scan the input for the information we need
-            sscanf( str, "%*u %*u %s %*u %*u %u %*u %*u %*u %u", devNameInp.data(), &newRead, &newWritten );
-
-            // We first need to remove all the null characters from the string
-            devNameInp.resize( devNameInp.find_first_of((char)0 ) );
-
-            // Find the disk and update the stats
-            for(i=0 ; i < disks->size() ; i++)
-            {
-                if(devNameInp == disks->at(i)->getName())
-                {
-                    disks->at(i)->updateStats(newRead + newWritten);
-                    break;
-                }
-            }
-        }
-
-        fin.close();
-    }
-    else
-    {
-        string msg("Can't open file: ");
-        msg += STATS_PATH;
-        Log::get()->message(LOG_INFO, msg);
-    }
+	 // Find the disk and update the stats
+	 for(disk = disks.begin() ; disk != disks.end() ; ++disk)
+	 {
+		 if(disk->getConnected() && disk->getIdle())
+			 disk->spindown();
+	 }
 }
 
-void Spindown::updateDiskStats()
+
+void Spindown::printSet()
 {
-    updateDiskStats(disks);
+	list<Disk>::iterator disk;
+
+	cout << "devName connected active idletime blocks cmd" << endl;
+
+	// Find the disk and update the stats
+	for(disk = disks.begin() ; disk != disks.end() ; ++disk)
+	{
+		cout << disk->getDevice() << " "
+			<< (disk->getConnected() ? "1" : "0") << " "
+			<< (disk->getActive() ? "1" : "0") << " "
+			<< disk->getIdleTime() << " "
+			<< disk->getBlocksTransferred() << " "
+			<< disk->getCommand() << endl;
+	}
 }
 
-DiskSet* Spindown::getDisks()
+list<Disk>& Spindown::getDisks()
 {
-    return disks;
+	return disks;
 }
 
-void Spindown::setDisks(DiskSet* newDiskSet, bool update)
+Disk& Spindown::getDefaultDisk()
 {
-    // If a previous configuration exists, copy the internal status
-    // to the new configuration and delete the old one.
-    if (disks != NULL && update)
-    {
-        updateDevNames(newDiskSet);
-        updateDevNames();
-        newDiskSet->setStatsFrom(*disks);
-    }
-
-    if (disks != NULL)
-        delete disks;
-
-    disks = newDiskSet;
+	return defaultDisk;
 }
 
-void Spindown::spinDownIdleDisks()
+Disk& Spindown::getDiskByDevice(string name)
 {
-    Disk* disk;
-    string message;
-    bool active;
-    unsigned int sgTime;
+	 list<Disk>::iterator disk;
 
-    // Commit buffer cache to disk
-    sync();
+	 // Find the disk and update the stats
+	 for(disk = disks.begin() ; disk != disks.end() ; ++disk)
+	 {
+		 if(name == disk->getDevice())
+			 return (*disk);
+	 }
 
-    for( int i=0 ; i < disks->size() ; i++ )
-    {
-        disk = disks->at(i);
-
-        if (! disk)
-            continue;
-
-        // If more than one entry is found we cannot determine
-        // which entry to spindown. So we ignore this case.
-        if (disks->countEntries(*disk) == 1)
-        {
-            sgTime = disk->spinDownTime();
-
-            // if no spindown time was configured, use the passed default vaule
-            if(sgTime == 0)
-                sgTime = disks->getCommonSpindownTime();
-
-            // Only spindown disks that have been idle long enough, have a correct
-            // devicename and are active or should be spundown everytime.
-            if (disk->getName() != "" && disk->idleTime() >= sgTime && (disk->isActive() || disk->getRepeat()))
-            {
-                active = disk->isActive();
-
-                try
-                {
-                    disk->spindown();
-                }
-                catch (SpindownException e)
-                {
-                    Log::get()->message( LOG_INFO, e.message );
-                    continue;
-                }
-
-                if (active)
-                {
-                    message = disk->getName() + " is now inactive.";
-                    Log::get()->message( LOG_INFO, message );
-                }
-            }
-        }
-    }
+	 throw SpindownException("no disk");
 }
 
-string Spindown::getStatusString( bool all ) const
+Disk& Spindown::getDiskByName(string name)
 {
-    ostringstream status;
+	 list<Disk>::iterator disk;
 
-    for( int i=0 ; i < disks->size() ; i++ )
-    {
-        Disk* disk = disks->at(i);
+	 // Find the disk and update the stats
+	 for(disk = disks.begin() ; disk != disks.end() ; ++disk)
+	 {
+		 if(name == disk->getDevName() && disk->getConnected())
+			 return (*disk);
+	 }
 
-        if (all || (disks->countEntries(*disk) == 1 && disk->isPresent()))
-        {
-            status << (disk->getName()=="" ? "none" : disk->getName()) << " "
-                << disk->isWatched() << " "
-                << disk->isActive() << " "
-                << disk->idleTime() << " "
-                << (disk->spinDownTime() ? disk->spinDownTime() : disks->getCommonSpindownTime() )
-                << endl;
-        }
-    }
-
-    return status.str();
+	 throw SpindownException("no disk");
 }
