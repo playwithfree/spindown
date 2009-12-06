@@ -236,9 +236,11 @@ void Spindownd::readConfig(string const &path)
 		,device
 		,cmd;
 
-    struct stat sbuf;
+    Disk* disk;
 
-	list<Disk>::iterator disk;
+    list<Disk>::iterator i;
+
+    struct stat sbuf;
 
 	int 	idleTime;
 
@@ -281,9 +283,9 @@ void Spindownd::readConfig(string const &path)
 
 
     // Get general configuration
-	cycleTime = iniparser_getint(ini, string(section+":cycle-time").data(), 3);
+	cycleTime = iniparser_getint(ini, string("spindown:cycle-time").data(), 3);
 
-	if( iniparser_getboolean(ini, string(section+":syslog").data(), 0) )
+	if( iniparser_getboolean(ini, string(section+"spindown:syslog").data(), 0) )
 		Log::get()->open((char*)"spindown", LOG_NDELAY, LOG_DAEMON);
 	else
 		Log::get()->close();
@@ -301,12 +303,12 @@ void Spindownd::readConfig(string const &path)
 	spindown.getDefaultDisk().setRepeat(rp);
 
 	// Apply default configuration
-	for(disk = spindown.getDisks().begin() ; disk != spindown.getDisks().end() ; ++disk)
+	for(i = spindown.getDisks().begin() ; i != spindown.getDisks().end() ; ++i)
 	{
-    	disk->setSpindownTime(idleTime);
-    	disk->setDoSpindown(sd);
-    	disk->setCommand(cmd);
-    	disk->setRepeat(rp);
+    	i->setSpindownTime(idleTime);
+    	i->setDoSpindown(sd);
+    	i->setCommand(cmd);
+    	i->setRepeat(rp);
 	}
 
 
@@ -336,23 +338,33 @@ void Spindownd::readConfig(string const &path)
 
         	try
         	{
-        		Disk& disk = spindown.getDiskByDevice(device);
-
-            	disk.setSpindownTime(idleTime);
-            	disk.setDoSpindown(sd);
-            	disk.setCommand(cmd);
-            	disk.setDevice(device);
-            	disk.setRepeat(rp);
+        		disk = &spindown.getDiskByName(device.substr(device.find_last_of('/') + 1));
         	}
 
         	catch(SpindownException e)
-			{
-        		Disk disk(device, sd, cmd, idleTime, rp);
+        	{
+				try
+				{
+					disk = &spindown.getDiskByDevice(device);
+				}
 
-    			spindown.getDisks().push_back(disk);
+				catch(SpindownException e)
+				{
+					Disk disk(device, sd, cmd, idleTime, rp);
 
-    		    spindown.sort();
-			}
+					spindown.getDisks().push_back(disk);
+
+					spindown.sort();
+
+					continue;
+				}
+        	}
+
+			disk->setSpindownTime(idleTime);
+			disk->setDoSpindown(sd);
+			disk->setCommand(cmd);
+			disk->setDevice(device);
+			disk->setRepeat(rp);
         }
     }
 
