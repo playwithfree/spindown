@@ -44,7 +44,7 @@ class Spindownd
          * Updates the device list and spinsdown disks
          * everytime after cycleTime.
          */
-        static void run();
+        static void run(bool = false);
 
         /**
          * Reads the configuration file and configures spindown.

@@ -172,7 +172,7 @@ void Disk::spindown()
     if (connected && doSpindown)
     {
         int ret;
-        string cmd = command + device;
+        string cmd = command + " " + device;
 
         if(!(ret=system(cmd.data())))
         {

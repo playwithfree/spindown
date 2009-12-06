@@ -36,7 +36,7 @@ int main( int argc, char* argv[] )
 	try
 	{
 		Spindownd::init(argc,argv);
-		Spindownd::run();
+		Spindownd::run(false);
 	}
 
 	catch(SpindownException e)

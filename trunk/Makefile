@@ -17,17 +17,17 @@ OBJS = $(TARGET)main.o $(TARGET)disk.o $(TARGET)spindown.o $(TARGET)iniparser.o\
 
 debug:
 	mkdir -p Debug
-	make all TARGET="Debug/" LDFLAGS="$(LDFLAGS) -g" CXXFLAGS="$(CXXFLAGS) -g"
+	$(MAKE) all TARGET="Debug/" LDFLAGS="$(LDFLAGS) -g" CXXFLAGS="$(CXXFLAGS) -g"
 
 debug-clean:
-	make clean TARGET="Debug/"
+	$(MAKE) clean TARGET="Debug/"
 
 release:
 	mkdir -p Release
-	make all TARGET="Release/"
+	$(MAKE) all TARGET="Release/"
 
 release-clean:
-	make clean TARGET="Release/"
+	$(MAKE) clean TARGET="Release/"
 
 all: $(TARGET)spindownd
 	@echo "---"

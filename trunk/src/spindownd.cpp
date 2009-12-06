@@ -78,7 +78,7 @@ void Spindownd::init(int argc, char* argv[])
         daemonize();
 }
 
-void Spindownd::run()
+void Spindownd::run(bool print)
 {
     Log::get()->message(LOG_INFO, "Daemon started.");
 
@@ -90,7 +90,8 @@ void Spindownd::run()
 
 		spindown.spindownIdleDisks();
 
-		spindown.printSet();
+		if(print)
+			 spindown.printSet();
 
         sleep(cycleTime);
     }

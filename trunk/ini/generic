@@ -1,0 +1,89 @@
+#!/bin/bash
+
+DAEMON="/sbin/spindownd"
+CONFPATH="/etc/spindown.conf"
+VARDIR="/var/run/spindown"
+FIFOPATH=$VARDIR"/spindownd.fifo"
+PIDFILE=$VARDIR"/spindownd.pid"
+
+#prints table with status about the disks
+status()
+{
+    printf "%-5s %10s %10s %15s %20s\n" name watched active idle-time spindown-time
+
+    while read line; do
+
+            printf "%-5s %10s %10s %15s %20s\n" $line
+
+    done < $FIFOPATH
+
+    exit 0
+}
+
+case "$1" in
+    "start")
+        echo -n Starting disk spindown daemon: spindownd 
+        
+        mkdir -p $VARDIR &> /dev/null
+        
+        $DAEMON -d -f $FIFOPATH  -c $CONFPATH -p $PIDFILE
+        
+        echo done.
+
+        exit $?
+        ;;
+
+    "stop")
+        echo -n Stopping disk spindown daemon: spindownd 
+        
+        kill `cat $PIDFILE`
+        
+        rmdir $VARDIR &> /dev/null
+        
+        echo done.
+
+        exit $?
+        ;;
+
+    "status")
+        if [ -f $PIDFILE ]; then
+            echo -n
+        else
+            exit 1
+        fi
+
+        # First open the fifo and then send the signal
+        status &
+        
+        sleep 0.1
+		kill -pipe `cat $PIDFILE`
+		
+		# Join with child process
+        wait $!
+
+        exit 0
+        ;;
+
+    "restart"|"condrestart")
+        $0 stop
+        $0 start
+
+        exit $?
+        ;;
+
+    "reload")
+        echo -n Reloading disk spindown daemon: spindownd 
+        
+        kill -hup `cat $PIDFILE`
+        
+        echo done.
+
+        exit $?
+        ;;
+
+    *)
+        echo "Usage: $0 {start|stop|restart|reload|status}"
+        exit 1
+esac
+
+exit 0
