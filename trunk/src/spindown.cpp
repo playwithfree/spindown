@@ -143,7 +143,8 @@ void Spindown::spindownIdleDisks()
 	 // Find the disk and update the stats
 	 for(disk = disks.begin() ; disk != disks.end() ; ++disk)
 	 {
-		 if(disk->getConnected() && disk->getIdle())
+		 if( (disk->getConnected() && disk->getIdle() && disk->getDoSpindown())
+			 && (disk->getActive() || disk->getRepeat()) )
 		 {
 			 try
 			 {

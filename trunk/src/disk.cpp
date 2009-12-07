@@ -169,7 +169,7 @@ unsigned int Disk::getBlocksTransferred()
 
 void Disk::spindown()
 {
-    if (connected && doSpindown)
+    if(connected && doSpindown)
     {
         int ret;
         string cmd = command + " " + device;
