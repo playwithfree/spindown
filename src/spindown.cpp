@@ -148,9 +148,13 @@ void Spindown::spindownIdleDisks()
 		 {
 			 try
 			 {
+				 if(disk->getActive())
+				 {
+					 Log::get()->message(LOG_INFO
+							 , "Spinning down: " + disk->getDevice());
+				 }
+
 				 disk->spindown();
-				 Log::get()->message(LOG_INFO
-						 , "Spinning down: " + disk->getDevice());
 			 }
 
 			 catch(SpindownException e)
